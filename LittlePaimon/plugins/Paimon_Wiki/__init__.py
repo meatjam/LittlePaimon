@@ -3,7 +3,7 @@ import time
 from nonebot import on_regex
 from nonebot.adapters.onebot.v11 import MessageEvent, Message, MessageSegment
 from nonebot.adapters.onebot.v11.helpers import is_cancellation
-from nonebot.adapters.onebot.v11.exception import ActionFailed
+from nonebot.adapters.onebot.exception import ActionFailed
 from nonebot.params import RegexDict, ArgPlainText
 from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
@@ -11,10 +11,11 @@ from nonebot.typing import T_State
 from LittlePaimon.utils.alias import get_match_alias
 from LittlePaimon.utils.message import MessageBuild
 from LittlePaimon.database.models import PlayerAlias
+
 # from .abyss_rate_draw import draw_rate_rank, draw_teams_rate
 
 __paimon_help__ = {
-    'type':  '原神Wiki',
+    'type': '原神Wiki',
     'range': ['private', 'group', 'guild']
 }
 
@@ -32,18 +33,20 @@ __plugin_meta__ = PluginMetadata(
     description='原神WIKI百科',
     usage=help_msg,
     extra={
-        'author':   '惜月',
-        'version':  '3.0',
+        'author': '惜月',
+        'version': '3.0',
         'priority': 3,
     }
 )
 
 daily_material = on_regex(r'(?P<day>现在|(今|明|后)(天|日)|周(一|二|三|四|五|六|日))(天赋|角色|武器)?材料', priority=11, block=True, state={
-    'pm_name':        '每日材料',
+    'pm_name': '每日材料',
     'pm_description': '查看某日开放材料刷取的角色和武器',
-    'pm_usage':       '<今天|周几>材料',
-    'pm_priority':    8
+    'pm_usage': '<今天|周几>材料',
+    'pm_priority': 8
 })
+
+
 # abyss_rate = on_command('syrate', aliases={'深渊登场率', '深境螺旋登场率', '深渊登场率排行', '深渊排行'}, priority=11, block=True, state={
 #     'pm_name':        '深渊登场率排行',
 #     'pm_description': '查看本期深渊的角色登场率排行',
@@ -101,10 +104,10 @@ async def _(event: MessageEvent, regex_dict: dict = RegexDict()):
 
 def create_wiki_matcher(pattern: str, help_fun: str, help_name: str):
     maps = on_regex(pattern, priority=11, block=True, state={
-        'pm_name':        help_fun,
+        'pm_name': help_fun,
         'pm_description': f"查看该{help_name}的{help_fun}",
-        'pm_usage':       f'<{help_name}名> {help_fun}',
-        'pm_priority':    5
+        'pm_usage': f'<{help_name}名> {help_fun}',
+        'pm_priority': 5
     })
     maps.plugin_name = 'Paimon_Wiki'
 
@@ -143,7 +146,8 @@ def create_wiki_matcher(pattern: str, help_fun: str, help_name: str):
             if is_cancellation(name):
                 await maps.finish()
             name = name.extract_plain_text().strip()
-        if state['type'] == '角色' and (match_alias := await PlayerAlias.get_or_none(user_id=str(event.user_id), alias=name)):
+        if state['type'] == '角色' and (
+        match_alias := await PlayerAlias.get_or_none(user_id=str(event.user_id), alias=name)):
             try:
                 await maps.finish(MessageSegment.image(state['img_url'].format(match_alias.character)))
             except ActionFailed:
@@ -151,7 +155,7 @@ def create_wiki_matcher(pattern: str, help_fun: str, help_name: str):
         match_alias = get_match_alias(name, state['type'])
         true_name = match_alias[0] if (
                 isinstance(match_alias, list) and len(match_alias) == 1) else match_alias if isinstance(match_alias,
-                                                                                                        str) else None
+            str) else None
         if true_name:
             try:
                 await maps.finish(MessageSegment.image(state['img_url'].format(match_alias)))

@@ -35,7 +35,7 @@ async def _(event: Union[GroupMessageEvent, PrivateMessageEvent], regex_dict: di
                                      '女士', '达达利亚', '莫娜', '班尼特', '申鹤', '行秋', '烟绯', '久岐忍', '辛焱', '砂糖', '胡桃', '重云', '菲谢尔',
                                      '诺艾尔', '迪奥娜', '鹿野院平藏']:
         return
-    elif len(regex_dict['text']) > 20:
+    elif len(regex_dict['text']) > 500:
         return
     await voice_cmd.finish(MessageSegment.record(
         f'http://233366.proxy.nscc-gz.cn:8888/?text={regex_dict["text"]}&speaker={regex_dict["chara"]}'))
