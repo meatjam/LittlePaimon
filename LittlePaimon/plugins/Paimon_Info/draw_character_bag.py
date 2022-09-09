@@ -39,6 +39,7 @@ def sort_characters(characters: List[Character]) -> List[Character]:
     武器等级每级0.6/0.6/0.6/0.8/1分，精炼等级每级10/10/10/20/40，
     圣遗物每级0.5/0.8/1分，每个两件套20分，四件套60分，最后按降序排序
     """
+    characters = [chara for chara in characters if chara is not None]
     for chara in characters:
         chara.score = chara.level * (0.8 if chara.rarity == 4 else 1) + chara.fetter * 3
         if chara.talents:
