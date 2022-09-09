@@ -5,11 +5,6 @@ usage: mys签到
 status:
 show: true
 priority: 11
-configs:
-  签到开始小时: 0
-  签到开始分钟: 5
-  米游币开始小时: 0
-  米游币开始分钟: 30
 matchers:
 - pm_name: 米游社签到
   pm_description: '*执行米游社签到操作，或开启每日自动签到'

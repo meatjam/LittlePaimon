@@ -7,7 +7,6 @@ usage: "\"1.[xx角色攻略]查看西风驿站出品的角色一图流攻略\n\"
 status:
 show: true
 priority: 3
-configs:
 matchers:
 - pm_name: 原魔图鉴
   pm_description: 查看该原魔的原魔图鉴

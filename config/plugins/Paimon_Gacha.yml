@@ -5,9 +5,6 @@ usage: 抽[数量]十连[卡池]
 status:
 show: true
 priority: 9
-configs:
-  群冷却: 30
-  群成员冷却: 60
 matchers:
 - pm_name: 删除定轨
   pm_description: 删除当前定轨武器

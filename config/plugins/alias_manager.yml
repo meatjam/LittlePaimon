@@ -6,5 +6,4 @@ usage: "添加别名：alias {name}={command}\n查看别名：alias {name}\n别�
 status:
 show: true
 priority: 99
-configs:
 matchers: []

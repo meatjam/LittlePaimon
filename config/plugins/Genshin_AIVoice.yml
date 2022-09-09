@@ -5,7 +5,6 @@ usage: '...'
 status:
 show: true
 priority: 8
-configs:
 matchers:
 - pm_name: 原神语音合成
   pm_description: AI语音合成，让原神角色说任何话！

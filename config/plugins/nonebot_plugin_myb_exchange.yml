@@ -5,7 +5,6 @@ usage: "myb 跟随Bot的指引录入兑换计划\nmyb_info 查看当前的兑换
 status:
 show: true
 priority: 99
-configs:
 matchers:
 - pm_name: 米游币兑换
   pm_description: 录入米游币商品自动兑换计划

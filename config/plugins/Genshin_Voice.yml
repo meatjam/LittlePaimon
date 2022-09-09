@@ -5,7 +5,6 @@ usage: 原神猜语音
 status:
 show: true
 priority: 6
-configs:
 matchers:
 - pm_name: 原神猜语音
   pm_description: 原神猜语音小游戏

@@ -5,8 +5,6 @@ usage: ssbq(uid)
 status:
 show: true
 priority: 4
-configs:
-  检查间隔: 16
 matchers:
 - pm_name: ssbq提醒
   pm_description: '*开启|关闭ssbq提醒，可订阅树脂以及尘歌壶钱币提醒'

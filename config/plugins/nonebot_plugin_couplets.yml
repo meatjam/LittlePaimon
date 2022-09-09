@@ -5,7 +5,6 @@ usage: 对联<内容>(数量)
 status:
 show: true
 priority: 99
-configs:
 matchers:
 - pm_name: 对联
   pm_description:

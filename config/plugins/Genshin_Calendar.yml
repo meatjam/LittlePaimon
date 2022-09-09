@@ -5,7 +5,6 @@ usage: "原神日历 : 查看本群订阅服务器日历\n原神日历 on 时间
 status:
 show: true
 priority: 7
-configs:
 matchers:
 - pm_name: 原神日历
   pm_description:

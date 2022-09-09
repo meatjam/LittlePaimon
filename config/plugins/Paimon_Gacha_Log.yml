@@ -6,7 +6,6 @@ usage: 1.[获取抽卡记录 (uid) (url)]提供url，获取原神抽卡记录，
 status:
 show: true
 priority: 10
-configs:
 matchers:
 - pm_name: 获取抽卡记录
   pm_description: 从抽卡链接获取抽卡记录，链接可以通过祈愿页面断网取得
@@ -27,4 +26,14 @@ matchers:
   pm_description: '*通过stoken更新原神抽卡记录'
   pm_usage: 更新抽卡记录(uid)
   pm_priority: 1
+  pm_show: true
+- pm_name: 导出抽卡记录
+  pm_description: 导出符合UIGF标准的抽卡记录json文件
+  pm_usage: 导出抽卡记录
+  pm_priority: 4
+  pm_show: true
+- pm_name: 导入抽卡记录
+  pm_description: 导入符合UIGF标准的抽卡记录json文件，发送命令后，于5分钟内上传json文件即可
+  pm_usage: 导入抽卡记录
+  pm_priority: 3
   pm_show: true

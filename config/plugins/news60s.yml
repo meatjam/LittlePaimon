@@ -5,7 +5,6 @@ usage: "60秒读世界 : 查看本群订阅服务器日历\n60秒读世界 on �
 status:
 show: true
 priority: 99
-configs:
 matchers:
 - pm_name: 早报
   pm_description:

@@ -5,7 +5,6 @@ usage: ysb
 status:
 show: true
 priority: 2
-configs:
 matchers:
 - pm_name: ysb
   pm_description: 绑定原神uid或者cookie
