@@ -257,7 +257,7 @@ async def _(event: MessageEvent, uid=CommandUID(), msg: str = Arg('msg')):
             include_talent = any(i in msg for i in ['全部', '技能', '天赋', 'talent', 'all'])
             await update_info.send('开始更新原神信息，请稍后...')
             logger.info('原神信息', '➤开始更新', {'用户': event.user_id, 'UID': uid})
-            freq_limiter.start(f'udi{uid}', 180)
+            freq_limiter.start(f'udi{uid}', 3)
             gim = GenshinInfoManager(str(event.user_id), uid)
             result = await gim.update_all(include_talent)
         except Exception as e:
@@ -288,7 +288,7 @@ async def _(event: MessageEvent, msg: Message = CommandArg()):
 async def _(event: MessageEvent):
     if aliases := await PlayerAlias.filter(user_id=str(event.user_id)).all():
         await show_alias.finish('你已设以下别名:' + '\n'.join(f'{alias.alias}->{alias.character}' for alias in aliases),
-                                at_sender=True)
+            at_sender=True)
     else:
         await show_alias.finish('你还没有设置过角色别名哦', at_sender=True)
 
