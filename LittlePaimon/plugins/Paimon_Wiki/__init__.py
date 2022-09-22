@@ -1,7 +1,7 @@
 import time
 
 from nonebot import on_regex, on_command
-from nonebot.adapters.onebot.v11 import MessageEvent, Message, MessageSegment
+from nonebot.adapters.onebot.v11 import MessageEvent, Message, MessageSegment, GroupMessageEvent
 from nonebot.adapters.onebot.v11.helpers import HandleCancellation
 from nonebot.adapters.onebot.exception import ActionFailed
 from nonebot.params import RegexDict, ArgPlainText, CommandArg, Arg
@@ -86,31 +86,28 @@ generate_map = on_command('生成地图', priority=1, block=True, permission=SUP
 
 @daily_material.handle()
 async def _(event: MessageEvent, regex_dict: dict = RegexDict()):
+    await daily_material.send('开始获取每日材料，请稍候...')
     if regex_dict['day'] in ['今日', '今天', '现在']:
         day = time.strftime("%w")
     elif regex_dict['day'] in ['明日', '明天']:
         day = str(int(time.strftime("%w")) + 1)
     elif regex_dict['day'] in ['后日', '后天']:
         day = str(int(time.strftime("%w")) + 2)
-    elif regex_dict['day'] in ['周一', '周四']:
-        day = '1'
-    elif regex_dict['day'] in ['周二', '周五']:
-        day = '2'
-    elif regex_dict['day'] in ['周三', '周六']:
-        day = '3'
-    else:
-        day = '0'
-    if day == "0":
+    elif regex_dict['day'] == '周日':
         await daily_material.finish('周日所有材料都可以刷哦!', at_sender=True)
-    elif day in ['1', '4']:
-        await daily_material.finish(
-            MessageSegment.image(file='https://static.cherishmoon.fun/LittlePaimon/DailyMaterials/周一周四.jpg'))
-    elif day in ['2', '5']:
-        await daily_material.finish(
-            MessageSegment.image(file='https://static.cherishmoon.fun/LittlePaimon/DailyMaterials/周二周五.jpg'))
+    elif regex_dict['day'].startswith('周'):
+        await daily_material.finish(await draw_material(regex_dict['day']))
+    if day == '0':
+        await daily_material.finish('周日所有材料都可以刷哦!', at_sender=True)
     else:
-        await daily_material.finish(
-            MessageSegment.image(file='https://static.cherishmoon.fun/LittlePaimon/DailyMaterials/周三周六.jpg'))
+        await daily_material.finish(await draw_material({
+            '1': '周一',
+            '2': '周二',
+            '3': '周三',
+            '4': '周四',
+            '5': '周五',
+            '6': '周六',
+        }[day]), at_sender=True)
 
 
 @material_map.handle()
@@ -158,6 +155,21 @@ async def _(event: MessageEvent, state: T_State, msg: Message = CommandArg()):
         state['names'] = params
 
 
+@material_map_full.got('names', prompt='请输入要查询的材料名称，或回答【取消】退出',
+                       parameterless=[HandleCancellation(f'好吧，有需要再找{NICKNAME}')])
+async def _(event: MessageEvent, map_: str = Arg('map'), names=Arg('names')):
+    if isinstance(names, Message):
+        names = names.extract_plain_text().split(' ')
+    if not freq_limiter.check(f'材料地图_{event.group_id if isinstance(event, GroupMessageEvent) else event.user_id}'):
+        await material_map_full.finish(
+            f'材料地图查询冷却中，剩余{freq_limiter.left(f"材料地图_{event.group_id if isinstance(event, GroupMessageEvent) else event.user_id}")}秒',
+            at_sender=True)
+    freq_limiter.start(f'材料地图_{event.group_id if isinstance(event, GroupMessageEvent) else event.user_id}', 15)
+    if len(names) > 3:
+        names = names[:3]
+    await material_map_full.send(MessageBuild.Text(f'开始查找{"、".join(names)}的资源点，请稍候...'))
+    result = await get_full_map(names, map_)
+    await material_map_full.finish(result, at_sender=True)
 
 
 @generate_map.handle()
