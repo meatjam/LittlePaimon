@@ -69,3 +69,7 @@ class Config(BaseModel):
     auto_add_friend: bool = Field(False, alias='自动接受好友请求')
     auto_add_group: bool = Field(False, alias='自动接受群邀请')
     notice_event: bool = Field(True, alias='启用好友和群欢迎消息')
+
+    screenshot_enable: bool = Field(True, alias='启用网页截图权限')
+
+    guess_voice_time: int = Field(30, alias='原神猜语音时间')
