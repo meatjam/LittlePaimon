@@ -2,7 +2,7 @@ import random
 from typing import Union
 
 from nonebot import on_command
-from nonebot.adapters.onebot.v11.exception import ActionFailed
+from nonebot.adapters.onebot.exception import ActionFailed
 from nonebot.adapters.onebot.v11 import Message, MessageEvent, GroupMessageEvent, PrivateMessageEvent
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
@@ -11,6 +11,7 @@ from nonebot.plugin import PluginMetadata
 from LittlePaimon.utils.message import CommandCharacter, CommandLang, MessageBuild
 from LittlePaimon.utils.alias import get_match_alias
 from LittlePaimon.database.models import GenshinVoice
+from LittlePaimon.manager.plugin_manager import plugin_manager as pm
 from .handler import GuessVoice, get_character_voice, get_rank, get_voice_list
 from .resources import update_voice_resources
 
@@ -19,37 +20,37 @@ __plugin_meta__ = PluginMetadata(
     description='原神语音',
     usage='原神猜语音',
     extra={
-        'author':   '惜月',
-        'version':  '3.0',
+        'author': '惜月',
+        'version': '3.0',
         'priority': 6,
     }
 )
 
 guess_voice = on_command('原神猜语音', priority=12, block=True, state={
-        'pm_name':        '原神猜语音',
-        'pm_description': '原神猜语音小游戏',
-        'pm_usage':       '原神猜语音[语言][排行榜]',
-        'pm_priority':    1
-    })
+    'pm_name': '原神猜语音',
+    'pm_description': '原神猜语音小游戏',
+    'pm_usage': '原神猜语音[语言][排行榜]',
+    'pm_priority': 1
+})
 get_voice = on_command('原神语音', priority=12, block=True, state={
-        'pm_name':        '原神语音',
-        'pm_description': '获取指定角色的指定语音',
-        'pm_usage':       '原神语音<名|序号>[语言]',
-        'pm_priority':    3
-    })
+    'pm_name': '原神语音',
+    'pm_description': '获取指定角色的指定语音',
+    'pm_usage': '原神语音<名|序号>[语言]',
+    'pm_priority': 3
+})
 voice_list = on_command('原神语音列表', priority=12, block=True, state={
-        'pm_name':        '原神语音列表',
-        'pm_description': '查看角色的语音列表',
-        'pm_usage':       '原神语音列表<名><语言>',
-        'pm_priority':    2
-    })
+    'pm_name': '原神语音列表',
+    'pm_description': '查看角色的语音列表',
+    'pm_usage': '原神语音列表<名><语言>',
+    'pm_priority': 2
+})
 update_voice = on_command('更新原神语音资源', priority=12, permission=SUPERUSER, block=True, state={
-        'pm_name':        '更新原神语音资源',
-        'pm_description': '更新原神语音资源',
-        'pm_usage':       '更新原神语音资源',
-        'pm_show':       False,
-        'pm_priority':    4
-    })
+    'pm_name': '更新原神语音资源',
+    'pm_description': '更新原神语音资源',
+    'pm_usage': '更新原神语音资源',
+    'pm_show': False,
+    'pm_priority': 4
+})
 
 
 @guess_voice.handle()
@@ -59,9 +60,9 @@ async def _(event: GroupMessageEvent, msg: Message = CommandArg(), lang=CommandL
         result = await get_rank(event.group_id)
         await guess_voice.finish(result)
     else:
-        game = GuessVoice(event.group_id, 30, lang)
+        game = GuessVoice(event.group_id, pm.config.guess_voice_time, lang)
         result = await game.start()
-        await guess_voice.send('即将发送一段语音，将在30秒后公布答案')
+        await guess_voice.send(f'即将发送一段语音，将在{pm.config.guess_voice_time}秒后公布答案')
         try:
             await guess_voice.finish(result)
         except ActionFailed:
@@ -88,7 +89,8 @@ async def _(event: Union[GroupMessageEvent, PrivateMessageEvent], lang=CommandLa
 
 
 @voice_list.handle()
-async def _(event: Union[GroupMessageEvent, PrivateMessageEvent], character=CommandCharacter(1, False), lang=CommandLang()):
+async def _(event: Union[
+    GroupMessageEvent, PrivateMessageEvent], character=CommandCharacter(1, False), lang=CommandLang()):
     result = await get_voice_list(character[0], lang)
     await get_voice.finish(result)
 

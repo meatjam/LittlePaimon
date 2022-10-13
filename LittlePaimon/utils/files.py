@@ -13,6 +13,7 @@ import tqdm.asyncio
 from ruamel import yaml
 
 cache_image: Dict[str, any] = {}
+headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36'}
 
 
 async def load_image(
@@ -38,11 +39,7 @@ async def load_image(
         if path.exists():
             img = Image.open(path)
         elif path.name.startswith(('UI_', 'Skill_')):
-            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36'}
-            try:
-                img = await aiorequests.get_img(f'https://enka.network/ui/{path.name}', headers=headers, save_path=path, follow_redirects=True)
-            except Exception as e:
-                raise FileNotFoundError(f'{path} not found') from e
+            img = await aiorequests.download_icon(path.name, headers=headers, save_path=path, follow_redirects=True)
         else:
             raise FileNotFoundError(f'{path} not found')
         cache_image[str(path)] = img
@@ -117,7 +114,7 @@ def load_yaml(path: Union[Path, str], encoding: str = 'utf-8'):
     if isinstance(path, str):
         path = Path(path)
     return yaml.load(path.open('r', encoding=encoding),
-                     Loader=yaml.RoundTripLoader) if path.exists() else yaml.round_trip_load('{}')
+                     Loader=yaml.Loader) if path.exists() else yaml.round_trip_load('{}')
 
 
 def save_yaml(data: dict, path: Union[Path, str] = None, encoding: str = 'utf-8'):

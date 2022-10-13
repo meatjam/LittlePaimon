@@ -9,16 +9,6 @@ info_file = load_json(JSON_DATA / 'genshin_info.json')
 weapon_file = load_json(JSON_DATA / 'weapon.json')
 
 
-def get_short_name(name: str) -> str:
-    """
-        获取角色或武器的短名（2个字）
-        :param name: 角色或武器名
-        :return: 短名字符串
-    """
-    short_name = load_json(JSON_DATA / 'short_name.json')
-    return name if name not in short_name.keys() else short_name[name]
-
-
 def get_id_by_name(name: str) -> Optional[str]:
     """
         根据角色名字获取角色的id
@@ -102,10 +92,16 @@ def get_chara_icon(name: Optional[str] = None, chara_id: Optional[int] = None,
     """
     if name and not chara_id:
         chara_id = get_id_by_name(name)
-    info = info_file.get(str(chara_id))
-    if not info:
+    if info := info_file.get(str(chara_id)):
+        side_icon = info['SideIconName']
+    elif str(chara_id) == '10000070':
+        side_icon = 'UI_AvatarIcon_Side_Nilou'
+    elif str(chara_id) == '10000071':
+        side_icon = 'UI_AvatarIcon_Side_Cyno'
+    elif str(chara_id) == '10000072':
+        side_icon = 'UI_AvatarIcon_Side_Candace'
+    else:
         return None
-    side_icon = info['SideIconName']
     if icon_type == 'side':
         return side_icon
     elif icon_type == 'avatar':

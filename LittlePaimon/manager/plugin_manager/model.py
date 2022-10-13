@@ -31,8 +31,6 @@ class PluginInfo(BaseModel):
     """是否展示"""
     priority: int = 99
     """展示优先级"""
-    configs: Optional[dict]
-    """插件配置项"""
     matchers: Optional[List[MatcherInfo]] = []
     """命令列表"""
 
@@ -60,6 +58,18 @@ class Config(BaseModel):
 
     AI_voice_cooldown: int = Field(10, alias='原神语音合成冷却')
 
-    ys_auto_update: int = Field(24, alia='ys自动更新小时')
-    ysa_auto_update: int = Field(24, alia='ysa自动更新小时')
-    ysd_auto_update: int = Field(6, alia='ysd自动更新小时')
+    ys_auto_update: int = Field(24, alias='ys自动更新小时')
+    ysa_auto_update: int = Field(24, alias='ysa自动更新小时')
+    ysd_auto_update: int = Field(6, alias='ysd自动更新小时')
+
+    cloud_genshin_enable: bool = Field(True, alias='云原神自动签到开关')
+    cloud_genshin_hour: int = Field(7, alias='云原神签到时间(小时)')
+
+    request_event: bool = Field(True, alias='启用好友和群请求通知')
+    auto_add_friend: bool = Field(False, alias='自动接受好友请求')
+    auto_add_group: bool = Field(False, alias='自动接受群邀请')
+    notice_event: bool = Field(True, alias='启用好友和群欢迎消息')
+
+    screenshot_enable: bool = Field(True, alias='启用网页截图权限')
+
+    guess_voice_time: int = Field(30, alias='原神猜语音时间')

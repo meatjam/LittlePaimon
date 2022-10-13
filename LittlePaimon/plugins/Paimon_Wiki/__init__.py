@@ -1,16 +1,22 @@
 import time
 
-from nonebot import on_regex
-from nonebot.adapters.onebot.v11 import MessageEvent, Message, MessageSegment
-from nonebot.adapters.onebot.v11.helpers import is_cancellation
-from nonebot.adapters.onebot.v11.exception import ActionFailed
-from nonebot.params import RegexDict, ArgPlainText
+from nonebot import on_regex, on_command
+from nonebot.adapters.onebot.v11 import MessageEvent, Message, MessageSegment, GroupMessageEvent
+from nonebot.adapters.onebot.v11.helpers import HandleCancellation
+from nonebot.adapters.onebot.exception import ActionFailed
+from nonebot.params import RegexDict, ArgPlainText, CommandArg, Arg
 from nonebot.plugin import PluginMetadata
+from nonebot.permission import SUPERUSER
 from nonebot.typing import T_State
 
+from LittlePaimon import NICKNAME
 from LittlePaimon.utils.alias import get_match_alias
+from LittlePaimon.utils.tool import freq_limiter
 from LittlePaimon.utils.message import MessageBuild
 from LittlePaimon.database.models import PlayerAlias
+from LittlePaimon.config import RESOURCE_BASE_PATH
+from .draw_map import init_map, draw_map, get_full_map
+
 # from .abyss_rate_draw import draw_rate_rank, draw_teams_rate
 
 __paimon_help__ = {
@@ -44,6 +50,26 @@ daily_material = on_regex(r'(?P<day>现在|(今|明|后)(天|日)|周(一|二|�
     'pm_usage':       '<今天|周几>材料',
     'pm_priority':    8
 })
+material_map = on_command('材料图鉴', priority=11, block=True, state={
+    'pm_name':        '材料图鉴',
+    'pm_description': '查看某个材料的介绍和采集点。',
+    'pm_usage':       '材料图鉴<材料名>[地图]',
+    'pm_priority':    9
+})
+material_map_full = on_command('材料地图', priority=11, block=True, state={
+    'pm_name':        '材料地图',
+    'pm_description': '查看多个材料大地图采集点。\n示例：材料地图 鸣草 鬼兜虫 提瓦特',
+    'pm_usage':       '材料地图<材料名列表>[地图]',
+    'pm_priority':    10
+})
+generate_map = on_command('生成地图', priority=1, block=True, permission=SUPERUSER, state={
+    'pm_name':        '生成地图',
+    'pm_description': '生成材料图鉴等所需要的地图资源，仅超级用户可用。',
+    'pm_usage':       '生成地图',
+    'pm_priority':    11
+})
+
+
 # abyss_rate = on_command('syrate', aliases={'深渊登场率', '深境螺旋登场率', '深渊登场率排行', '深渊排行'}, priority=11, block=True, state={
 #     'pm_name':        '深渊登场率排行',
 #     'pm_description': '查看本期深渊的角色登场率排行',
@@ -60,43 +86,97 @@ daily_material = on_regex(r'(?P<day>现在|(今|明|后)(天|日)|周(一|二|�
 
 @daily_material.handle()
 async def _(event: MessageEvent, regex_dict: dict = RegexDict()):
+    await daily_material.send('开始获取每日材料，请稍候...')
     if regex_dict['day'] in ['今日', '今天', '现在']:
         day = time.strftime("%w")
     elif regex_dict['day'] in ['明日', '明天']:
         day = str(int(time.strftime("%w")) + 1)
     elif regex_dict['day'] in ['后日', '后天']:
         day = str(int(time.strftime("%w")) + 2)
-    elif regex_dict['day'] in ['周一', '周四']:
-        day = '1'
-    elif regex_dict['day'] in ['周二', '周五']:
-        day = '2'
-    elif regex_dict['day'] in ['周三', '周六']:
-        day = '3'
-    else:
-        day = '0'
-    if day == "0":
+    elif regex_dict['day'] == '周日':
         await daily_material.finish('周日所有材料都可以刷哦!', at_sender=True)
-    elif day in ['1', '4']:
-        await daily_material.finish(
-            MessageSegment.image(file='https://static.cherishmoon.fun/LittlePaimon/DailyMaterials/周一周四.jpg'))
-    elif day in ['2', '5']:
-        await daily_material.finish(
-            MessageSegment.image(file='https://static.cherishmoon.fun/LittlePaimon/DailyMaterials/周二周五.jpg'))
+    elif regex_dict['day'].startswith('周'):
+        await daily_material.finish(await draw_material(str(event.user_id), regex_dict['day']))
+    if day == '0':
+        await daily_material.finish('周日所有材料都可以刷哦!', at_sender=True)
     else:
-        await daily_material.finish(
-            MessageSegment.image(file='https://static.cherishmoon.fun/LittlePaimon/DailyMaterials/周三周六.jpg'))
+        await daily_material.finish(await draw_material(str(event.user_id), {
+            '1': '周一',
+            '2': '周二',
+            '3': '周三',
+            '4': '周四',
+            '5': '周五',
+            '6': '周六',
+        }[day]), at_sender=True)
 
 
-# @abyss_rate.handle()
-# async def abyss_rate_handler(event: MessageEvent):
-#     abyss_img = await draw_rate_rank()
-#     await abyss_rate.finish(abyss_img)
+@material_map.handle()
+async def _(event: MessageEvent, state: T_State, msg: Message = CommandArg()):
+    if params := msg.extract_plain_text().strip():
+        params = params.split(' ')
+        state['name'] = Message(params[0])
+        if len(params) > 1:
+            if params[1] in {'提瓦特', '层岩巨渊', '渊下宫'}:
+                state['map'] = params[1]
+        else:
+            state['map'] = Message('提瓦特')
+    else:
+        state['map'] = Message('提瓦特')
 
 
-# @abyss_team.handle()
-# async def abyss_team_handler(event: MessageEvent, reGroup=RegexDict()):
-#     abyss_img = await draw_teams_rate(reGroup['floor'])
-#     await abyss_team.finish(abyss_img)
+@material_map.got('map', prompt='地图名称有误，请在【提瓦特、层岩巨渊、渊下宫】中选择，或回答【取消】退出',
+                  parameterless=[HandleCancellation(f'好吧，有需要再找{NICKNAME}')])
+async def _(event: MessageEvent, state: T_State, map_: str = ArgPlainText('map')):
+    if map_ not in {'提瓦特', '层岩巨渊', '渊下宫'}:
+        await material_map.reject('地图名称有误，请在【提瓦特、层岩巨渊、渊下宫】中选择')
+    else:
+        state['map'] = Message(map_)
+
+
+@material_map.got('name', prompt='请输入要查询的材料名称，或回答【取消】退出', parameterless=[HandleCancellation(f'好吧，有需要再找{NICKNAME}')])
+async def _(event: MessageEvent, map_: str = ArgPlainText('map'), name: str = ArgPlainText('name')):
+    if (file_path := RESOURCE_BASE_PATH / 'genshin_map' / 'results' / f'{map_}_{name}.png').exists():
+        await material_map.finish(MessageSegment.image(file_path), at_sender=True)
+    else:
+        await material_map.send(MessageBuild.Text(f'开始查找{name}的资源点，请稍候...'))
+        result = await draw_map(name, map_)
+        await material_map.finish(result, at_sender=True)
+
+
+@material_map_full.handle()
+async def _(event: MessageEvent, state: T_State, msg: Message = CommandArg()):
+    state['map'] = '提瓦特'
+    if params := msg.extract_plain_text().strip():
+        params = params.split(' ')
+        for p in params.copy():
+            if p in {'提瓦特', '层岩巨渊', '渊下宫'}:
+                params.remove(p)
+                state['map'] = p
+        state['names'] = params
+
+
+@material_map_full.got('names', prompt='请输入要查询的材料名称，或回答【取消】退出',
+                       parameterless=[HandleCancellation(f'好吧，有需要再找{NICKNAME}')])
+async def _(event: MessageEvent, map_: str = Arg('map'), names=Arg('names')):
+    if isinstance(names, Message):
+        names = names.extract_plain_text().split(' ')
+    if not freq_limiter.check(f'材料地图_{event.group_id if isinstance(event, GroupMessageEvent) else event.user_id}'):
+        await material_map_full.finish(
+            f'材料地图查询冷却中，剩余{freq_limiter.left(f"材料地图_{event.group_id if isinstance(event, GroupMessageEvent) else event.user_id}")}秒',
+            at_sender=True)
+    freq_limiter.start(f'材料地图_{event.group_id if isinstance(event, GroupMessageEvent) else event.user_id}', 15)
+    if len(names) > 3:
+        names = names[:3]
+    await material_map_full.send(MessageBuild.Text(f'开始查找{"、".join(names)}的资源点，请稍候...'))
+    result = await get_full_map(names, map_)
+    await material_map_full.finish(result, at_sender=True)
+
+
+@generate_map.handle()
+async def _(event: MessageEvent):
+    await generate_map.send('开始生成地图资源，这可能需要较长时间。')
+    result = await init_map()
+    await generate_map.finish(result)
 
 
 def create_wiki_matcher(pattern: str, help_fun: str, help_name: str):
@@ -136,14 +216,14 @@ def create_wiki_matcher(pattern: str, help_fun: str, help_name: str):
         if name:
             state['name'] = name
 
-    @maps.got('name', prompt=Message.template('请提供要查询的{type}'))
+    @maps.got('name', prompt=Message.template('请提供要查询的{type}'),
+              parameterless=[HandleCancellation(f'好吧，有需要再找{NICKNAME}')])
     async def _(event: MessageEvent, state: T_State):
         name = state['name']
         if isinstance(name, Message):
-            if is_cancellation(name):
-                await maps.finish()
             name = name.extract_plain_text().strip()
-        if state['type'] == '角色' and (match_alias := await PlayerAlias.get_or_none(user_id=str(event.user_id), alias=name)):
+        if state['type'] == '角色' and (
+                match_alias := await PlayerAlias.get_or_none(user_id=str(event.user_id), alias=name)):
             try:
                 await maps.finish(MessageSegment.image(state['img_url'].format(match_alias.character)))
             except ActionFailed:
@@ -168,11 +248,9 @@ def create_wiki_matcher(pattern: str, help_fun: str, help_name: str):
         else:
             await maps.finish(MessageBuild.Text(f'没有找到{name}的图鉴'))
 
-    @maps.got('choice')
+    @maps.got('choice', parameterless=[HandleCancellation(f'好吧，有需要再找{NICKNAME}')])
     async def _(event: MessageEvent, state: T_State, choice: str = ArgPlainText('choice')):
         match_alias = state['match_alias']
-        if is_cancellation(choice):
-            await maps.finish()
         if choice.isdigit() and (1 <= int(choice) <= len(match_alias)):
             try:
                 await maps.finish(MessageSegment.image(state['img_url'].format(match_alias[int(choice) - 1])))
@@ -181,12 +259,12 @@ def create_wiki_matcher(pattern: str, help_fun: str, help_name: str):
         if choice not in match_alias:
             state['times'] = state['times'] + 1 if 'times' in state else 1
             if state['times'] == 1:
-                await maps.reject(f'请旅行者从上面的{state["type"]}中选一个问派蒙\n回答\"q\"可以取消查询', at_sender=True)
+                await maps.reject(f'请旅行者从上面的{state["type"]}中选一个问{NICKNAME}\n回答\"取消\"可以取消查询', at_sender=True)
 
             elif state['times'] == 2:
-                await maps.reject(f'别调戏派蒙啦，快选一个吧，不想问了请回答\"q\"！', at_sender=True)
+                await maps.reject(f'别调戏{NICKNAME}啦，快选一个吧，不想问了请回答\"取消\"！', at_sender=True)
             elif state['times'] >= 3:
-                await maps.finish(f'看来旅行者您有点神志不清哦(，下次再问派蒙吧{MessageSegment.face(146)}', at_sender=True)
+                await maps.finish(f'看来旅行者您有点神志不清哦(，下次再问{NICKNAME}吧{MessageSegment.face(146)}', at_sender=True)
         try:
             await maps.finish(MessageSegment.image(state['img_url'].format(choice)))
         except ActionFailed:

@@ -18,7 +18,8 @@ hidden_plugins = [
     'nonebot_plugin_imageutils',
     'plugin_manager',
     'database_manager',
-    'admin'
+    'admin',
+    'NoticeAndRequest'
 ]
 
 
@@ -59,7 +60,7 @@ class PluginManager:
         """
         if config_name not in self.config.dict(by_alias=True).keys():
             return f'没有配置项为{config_name}'
-        if '启用' in config_name or '开关' in config_name:
+        if '启用' in config_name or '开关' in config_name or config_name in {'自动接受好友请求', '自动接受群邀请'}:
             if value not in ['开', '关', 'true', 'false', 'on', 'off']:
                 return '参数错误'
             value = value in ['开', 'true', 'on']
@@ -92,24 +93,15 @@ class PluginManager:
                             'usage':       metadata.usage,
                             'show':        metadata.extra.get('show', True),
                             'priority':    metadata.extra.get('priority', 99),
-                            'configs':     metadata.extra.get('configs'),
                             'cooldown':    metadata.extra.get('cooldown')
                         })
                     else:
                         self.data[plugin.name] = PluginInfo(name=plugin.name, module_name=plugin.name)
-                else:
-                    if metadata and metadata.extra.get('configs'):
-                        if self.data[plugin.name].configs:
-                            for config in metadata.extra['configs']:
-                                if config not in self.data[plugin.name].configs:
-                                    self.data[plugin.name].configs[config] = metadata.extra['configs'][config]
-                        else:
-                            self.data[plugin.name].configs = metadata.extra['configs']
                 matchers = plugin.matcher
                 for matcher in matchers:
                     if matcher._default_state:
                         matcher_info = MatcherInfo.parse_obj(matcher._default_state)
-                        if matcher_info.pm_name not in [m.pm_name for m in self.data[plugin.name].matchers]:
+                        if self.data[plugin.name].matchers is not None and matcher_info.pm_name not in [m.pm_name for m in self.data[plugin.name].matchers]:
                             self.data[plugin.name].matchers.append(matcher_info)
         self.save()
         logger.success('插件管理器', '<g>初始化完成</g>')
