@@ -21,3 +21,8 @@ matchers:
   pm_usage: 米游币获取(uid)[on|off]
   pm_priority: 2
   pm_show: true
+- pm_name: 米游币获取全部重做
+  pm_description: 重做全部米游币获取任务，需超级用户权限
+  pm_usage: '@Bot myb全部重做'
+  pm_priority: 4
+  pm_show: true

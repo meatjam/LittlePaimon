@@ -48,3 +48,18 @@ matchers:
   pm_usage: <武器名> 武器图鉴
   pm_priority: 5
   pm_show: true
+- pm_name: 材料图鉴
+  pm_description: 查看某个材料的介绍和采集点。
+  pm_usage: 材料图鉴<材料名>[地图]
+  pm_priority: 9
+  pm_show: true
+- pm_name: 材料地图
+  pm_description: "查看多个材料大地图采集点。\n示例：材料地图 鸣草 鬼兜虫 提瓦特"
+  pm_usage: 材料地图<材料名列表>[地图]
+  pm_priority: 10
+  pm_show: true
+- pm_name: 生成地图
+  pm_description: 生成材料图鉴等所需要的地图资源，仅超级用户可用。
+  pm_usage: 生成地图
+  pm_priority: 11
+  pm_show: true
