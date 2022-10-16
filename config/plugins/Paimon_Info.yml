@@ -41,6 +41,16 @@ matchers:
   pm_usage: ysc(uid)<角色名>
   pm_priority: 4
   pm_show: true
+- pm_name: 角色别名删除
+  pm_description: 删除你已设置的角色别名
+  pm_usage: 删除别名<别名>
+  pm_priority: 8
+  pm_show: true
+- pm_name: 角色别名查看
+  pm_description: 查看你已设置的角色别名
+  pm_usage: 查看别名
+  pm_priority: 9
+  pm_show: true
 - pm_name: 深渊统计
   pm_description: 查看本群深渊统计，仅群可用
   pm_usage: 深渊统计
