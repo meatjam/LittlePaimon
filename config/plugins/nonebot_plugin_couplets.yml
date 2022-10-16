@@ -2,7 +2,7 @@ name: 对对联
 module_name: nonebot_plugin_couplets
 description: 人工智能和你对对联
 usage: 对联<内容>(数量)
-status:
+status: true
 show: true
 priority: 99
 matchers:

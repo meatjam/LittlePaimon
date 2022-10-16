@@ -2,7 +2,7 @@ name: 原神每月札记
 module_name: Paimon_MonthInfo
 description: 原神每月札记信息
 usage: myzj(uid)[月份]
-status:
+status: true
 show: true
 priority: 5
 matchers:

@@ -2,7 +2,7 @@ name: 原神实时便签
 module_name: Paimon_DailyNote
 description: 原神实时便签信息
 usage: ssbq(uid)
-status:
+status: true
 show: true
 priority: 4
 matchers:

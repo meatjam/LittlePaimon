@@ -2,7 +2,7 @@ name: 实用工具
 module_name: tools
 description: 一些实用的工具插件
 usage: ''
-status:
+status: true
 show: true
 priority: 99
 matchers:
