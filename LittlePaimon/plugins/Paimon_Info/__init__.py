@@ -271,6 +271,6 @@ async def _(event: MessageEvent, msg: str = ArgPlainText('alias')):
 async def _(event: MessageEvent):
     if aliases := await PlayerAlias.filter(user_id=str(event.user_id)).all():
         await show_alias.finish('你已设以下别名:' + '\n'.join(f'{alias.alias}->{alias.character}' for alias in aliases),
-            at_sender=True)
+                                at_sender=True)
     else:
         await show_alias.finish('你还没有设置过角色别名哦', at_sender=True)

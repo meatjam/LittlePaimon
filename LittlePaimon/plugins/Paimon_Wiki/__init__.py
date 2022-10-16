@@ -16,6 +16,7 @@ from LittlePaimon.utils.message import MessageBuild
 from LittlePaimon.database.models import PlayerAlias
 from LittlePaimon.config import RESOURCE_BASE_PATH
 from .draw_map import init_map, draw_map, get_full_map
+from .draw_daily_material import draw_material
 
 # from .abyss_rate_draw import draw_rate_rank, draw_teams_rate
 
