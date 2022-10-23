@@ -20,37 +20,37 @@ __plugin_meta__ = PluginMetadata(
     description='原神语音',
     usage='原神猜语音',
     extra={
-        'author': '惜月',
-        'version': '3.0',
+        'author':   '惜月',
+        'version':  '3.0',
         'priority': 6,
     }
 )
 
 guess_voice = on_command('原神猜语音', priority=12, block=True, state={
-    'pm_name': '原神猜语音',
-    'pm_description': '原神猜语音小游戏',
-    'pm_usage': '原神猜语音[语言][排行榜]',
-    'pm_priority': 1
-})
+        'pm_name':        '原神猜语音',
+        'pm_description': '原神猜语音小游戏',
+        'pm_usage':       '原神猜语音[语言][排行榜]',
+        'pm_priority':    1
+    })
 get_voice = on_command('原神语音', priority=12, block=True, state={
-    'pm_name': '原神语音',
-    'pm_description': '获取指定角色的指定语音',
-    'pm_usage': '原神语音<名|序号>[语言]',
-    'pm_priority': 3
-})
+        'pm_name':        '原神语音',
+        'pm_description': '获取指定角色的指定语音',
+        'pm_usage':       '原神语音<名|序号>[语言]',
+        'pm_priority':    3
+    })
 voice_list = on_command('原神语音列表', priority=12, block=True, state={
-    'pm_name': '原神语音列表',
-    'pm_description': '查看角色的语音列表',
-    'pm_usage': '原神语音列表<名><语言>',
-    'pm_priority': 2
-})
+        'pm_name':        '原神语音列表',
+        'pm_description': '查看角色的语音列表',
+        'pm_usage':       '原神语音列表<名><语言>',
+        'pm_priority':    2
+    })
 update_voice = on_command('更新原神语音资源', priority=12, permission=SUPERUSER, block=True, state={
-    'pm_name': '更新原神语音资源',
-    'pm_description': '更新原神语音资源',
-    'pm_usage': '更新原神语音资源',
-    'pm_show': False,
-    'pm_priority': 4
-})
+        'pm_name':        '更新原神语音资源',
+        'pm_description': '更新原神语音资源',
+        'pm_usage':       '更新原神语音资源',
+        'pm_show':       False,
+        'pm_priority':    4
+    })
 
 
 @guess_voice.handle()
