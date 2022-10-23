@@ -66,3 +66,8 @@ matchers:
   pm_usage: 深渊统计
   pm_priority: 10
   pm_show: true
+- pm_name: ysc原图
+  pm_description: 获取ysc指令卡片中的原神同人图
+  pm_usage: (回复ysc消息) 原图
+  pm_priority: 10
+  pm_show: true
