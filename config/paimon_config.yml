@@ -24,3 +24,6 @@ ysd自动更新小时: 6
 启用好友和群欢迎消息: true
 启用网页截图权限: true
 原神猜语音时间: 30
+启用Web端: true
+Web端管理员密码: admin
+Web端token密钥: 49c294d32f69b732ef6447c18379451ce1738922a75cd1d4812ef150318a2ed0

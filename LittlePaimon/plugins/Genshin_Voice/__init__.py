@@ -2,7 +2,7 @@ import random
 from typing import Union
 
 from nonebot import on_command
-from nonebot.adapters.onebot.exception import ActionFailed
+from nonebot.adapters.onebot.v11.exception import ActionFailed
 from nonebot.adapters.onebot.v11 import Message, MessageEvent, GroupMessageEvent, PrivateMessageEvent
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
@@ -90,7 +90,7 @@ async def _(event: Union[GroupMessageEvent, PrivateMessageEvent], lang=CommandLa
 
 @voice_list.handle()
 async def _(event: Union[
-    GroupMessageEvent, PrivateMessageEvent], character=CommandCharacter(1, False), lang=CommandLang()):
+    GroupMessageEvent, PrivateMessageEvent], character=CommandCharacter(1), lang=CommandLang()):
     result = await get_voice_list(character[0], lang)
     await get_voice.finish(result)
 

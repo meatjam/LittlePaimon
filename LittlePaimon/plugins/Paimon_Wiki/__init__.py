@@ -3,7 +3,7 @@ import time
 from nonebot import on_regex, on_command
 from nonebot.adapters.onebot.v11 import MessageEvent, Message, MessageSegment, GroupMessageEvent
 from nonebot.adapters.onebot.v11.helpers import HandleCancellation
-from nonebot.adapters.onebot.exception import ActionFailed
+from nonebot.adapters.onebot.v11.exception import ActionFailed
 from nonebot.params import RegexDict, ArgPlainText, CommandArg, Arg
 from nonebot.plugin import PluginMetadata
 from nonebot.permission import SUPERUSER
