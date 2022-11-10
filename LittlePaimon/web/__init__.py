@@ -1,16 +1,17 @@
 import nonebot
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from LittlePaimon.utils import logger
-from .pages import admin_app, login_page, bind_cookie_page, blank_page
-from .api import BaseApiRouter
 
-from LittlePaimon.manager.plugin_manager import plugin_manager
+from LittlePaimon import DRIVER
+from LittlePaimon.config import config
+from LittlePaimon.utils import logger
+from .api import BaseApiRouter
+from .pages import admin_app, login_page, bind_cookie_page, blank_page
 
 app: FastAPI = nonebot.get_app()
 app.include_router(BaseApiRouter)
 
-logger.info('Web UI', '<g>启用成功</g>，默认地址为https://127.0.0.1:13579/LittlePaimon/login')
+logger.info('Web UI', f'<g>启用成功</g>，默认地址为<m>http://127.0.0.1:{DRIVER.config.port}/LittlePaimon/login</m>')
 
 requestAdaptor = '''
 requestAdaptor(api) {
@@ -33,7 +34,7 @@ responseAdaptor(api, payload, query, request, response) {
 
 @app.get('/LittlePaimon/admin', response_class=HTMLResponse)
 async def admin():
-    if plugin_manager.config.admin_enable:
+    if config.admin_enable:
         return admin_app.render(site_title='LittlePaimon 后台管理', theme='antd', requestAdaptor=requestAdaptor,
                                 responseAdaptor=responseAdaptor)
     else:
@@ -42,7 +43,7 @@ async def admin():
 
 @app.get('/LittlePaimon/login', response_class=HTMLResponse)
 async def login():
-    if plugin_manager.config.admin_enable:
+    if config.admin_enable:
         return login_page.render(site_title='登录 | LittlePaimon 后台管理', theme='antd')
     else:
         return blank_page.render(site_title='LittlePaimon')
@@ -50,7 +51,7 @@ async def login():
 
 @app.get('/LittlePaimon/cookie', response_class=HTMLResponse)
 async def bind_cookie():
-    if plugin_manager.config.CookieWeb_enable:
+    if config.CookieWeb_enable:
         return bind_cookie_page.render(site_title='绑定Cookie | LittlePaimon')
     else:
         return blank_page.render(site_title='LittlePaimon')

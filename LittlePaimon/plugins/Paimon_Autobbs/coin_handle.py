@@ -6,11 +6,12 @@ from collections import defaultdict
 from typing import Tuple
 
 from nonebot import get_bot
-from LittlePaimon.database.models import PrivateCookie, MihoyoBBSSub, LastQuery
-from LittlePaimon.utils import logger, aiorequests
-from LittlePaimon.utils import scheduler
+
+from LittlePaimon.config import config
+from LittlePaimon.database import PrivateCookie, MihoyoBBSSub, LastQuery
+from LittlePaimon.utils import logger, scheduler
+from LittlePaimon.utils.requests import aiorequests
 from LittlePaimon.utils.api import random_text, random_hex, get_old_version_ds, get_ds
-from LittlePaimon.manager.plugin_manager import plugin_manager as pm
 
 # 米游社的API列表
 bbs_Cookieurl = 'https://webapi.account.mihoyo.com/Api/cookie_accountinfo_by_loginticket?login_ticket={}'
@@ -205,7 +206,7 @@ class MihoyoBBSCoin:
                 if data['retcode'] != 1034:
                     self.is_valid = False
                 self.state = 'Cookie已失效' if data['retcode'] in [-100,
-                                                                10001] else f"出错了:{data['retcode']} {data['message']}"
+                                                                10001] else f"出错了:{data['retcode']} {data['message']}" if data['retcode'] != 1034 else '疑似遇到验证码'
                 logger.info('米游币自动获取', f'➤➤<r>{self.state}</r>')
                 return f'讨论区签到：{self.state}'
             await asyncio.sleep(random.randint(15, 30))
@@ -301,7 +302,7 @@ async def mhy_bbs_coin(user_id: str, uid: str) -> str:
     return msg if result else f'UID{uid}{msg}'
 
 
-@scheduler.scheduled_job('cron', hour=pm.config.auto_myb_hour, minute=pm.config.auto_myb_minute, misfire_grace_time=10)
+@scheduler.scheduled_job('cron', hour=config.auto_myb_hour, minute=config.auto_myb_minute, misfire_grace_time=10)
 async def _():
     await bbs_auto_coin()
 
@@ -310,7 +311,7 @@ async def bbs_auto_coin():
     """
     指定时间，执行所有米游币获取订阅任务， 并将结果分群绘图发送
     """
-    if not pm.config.auto_myb_enable:
+    if not config.auto_myb_enable:
         return
     t = time.time()
     subs = await MihoyoBBSSub.filter(sub_event='米游币自动获取').all()

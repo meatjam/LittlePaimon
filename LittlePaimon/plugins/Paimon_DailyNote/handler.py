@@ -6,13 +6,13 @@ import time
 
 import pytz
 from nonebot import get_bot
-from nonebot.params import CommandArg, Depends
 from nonebot.adapters.onebot.v11 import Message
+from nonebot.params import CommandArg, Depends
 
-from LittlePaimon.database.models import DailyNoteSub, Player
+from LittlePaimon.config import config
+from LittlePaimon.database import DailyNoteSub, Player, LastQuery
 from LittlePaimon.utils import logger, scheduler
 from LittlePaimon.utils.api import get_mihoyo_private_data
-from LittlePaimon.manager.plugin_manager import plugin_manager as pm
 from .draw import draw_daily_note_card
 
 
@@ -46,10 +46,15 @@ async def get_subs(**kwargs) -> str:
 
 
 async def handle_ssbq(player: Player):
+    await LastQuery.update_last_query(player.user_id, player.uid)
     data = await get_mihoyo_private_data(player.uid, player.user_id, 'daily_note')
     if isinstance(data, str):
         logger.info('原神实时便签', '➤', {'用户': player.user_id, 'UID': player.uid}, f'获取数据失败, {data}', False)
         return f'{player.uid}{data}\n'
+    elif data['retcode'] == 1034:
+        logger.info('原神实时便签', '➤', {'用户': player.user_id, 'UID': player.uid},
+                    '获取数据失败，状态码为1034，疑似验证码', False)
+        return f'{player.uid}获取数据失败，疑似遇米游社验证码阻拦，请稍后再试\n'
     elif data['retcode'] != 0:
         logger.info('原神实时便签', '➤', {'用户': player.user_id, 'UID': player.uid},
                     f'获取数据失败，code为{data["retcode"]}， msg为{data["message"]}', False)
@@ -69,21 +74,16 @@ async def handle_ssbq(player: Player):
             return f'{player.uid}绘制图片失败，{e}\n'
 
 
-@scheduler.scheduled_job('cron', minute=f'*/{pm.config.ssbq_check}', misfire_grace_time=10)
+@scheduler.scheduled_job('cron', minute=f'*/{config.ssbq_check}', misfire_grace_time=10)
 async def check_note():
-    if not pm.config.ssbq_enable:
+    if not config.ssbq_enable:
         return
-    # 0点到6点间不做检查
-    if pm.config.ssbq_begin <= datetime.datetime.now().hour <= pm.config.ssbq_end:
+    # 特定时间段不做检查
+    if config.ssbq_begin <= datetime.datetime.now().hour <= config.ssbq_end:
         return
-    t = time.time()
-    try:
-        subs = await DailyNoteSub.all()
-    except Exception as e:
-        logger.info('原神实时便签', '获取检查列表时<r>出错</r>，结束任务')
+    if not (subs := await DailyNoteSub.all()):
         return
-    if not subs:
-        return
+    time_now = time.time()
     logger.info('原神实时便签', f'开始执行定时检查，共<m>{len(subs)}</m>个任务，预计花费<m>{round(6 * len(subs) / 60, 2)}</m>分钟')
     for sub in subs:
         limit_num = 5 if sub.resin_num and sub.coin_num else 3
@@ -134,4 +134,4 @@ async def check_note():
                         logger.info('原神实时便签', '➤➤', {'用户': sub.user_id, 'UID': sub.uid}, f'发送提醒失败，{e}', False)
                 # 等待一会再检查下一个，防止检查过快
                 await asyncio.sleep(random.randint(4, 8))
-    logger.info('原神实时便签', f'树脂检查完成，共花费<m>{round((time.time() - t) / 60, 2)}</m>分钟')
+    logger.info('原神实时便签', f'树脂检查完成，共花费<m>{round((time.time() - time_now) / 60, 2)}</m>分钟')

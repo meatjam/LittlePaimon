@@ -4,10 +4,10 @@ import math
 import random
 from typing import Tuple, List, Optional
 
-from LittlePaimon.config import RESOURCE_BASE_PATH
 from LittlePaimon.utils.files import load_image
-from LittlePaimon.utils.message import MessageBuild
 from LittlePaimon.utils.image import PMImage, get_qq_avatar, font_manager as fm
+from LittlePaimon.utils.message import MessageBuild
+from LittlePaimon.utils.path import RESOURCE_BASE_PATH
 from .models import GachaLogInfo, FiveStarItem, FourStarItem
 
 avatar_point = [69, 156, 259, 358, 456, 558, 645, 746, 840, 945]
@@ -171,7 +171,7 @@ async def draw_gacha_log(user_id: str, uid: str, nickname: Optional[str], signat
     # 签名和uid
     if signature:
         await img.text(signature, 165, 116, fm.get('hywh', 32), '#252525')
-        nickname_length = img.text_length(nickname, fm.get('hywh', 40))
+        nickname_length = img.text_length(nickname, fm.get('hywh', 48))
         await img.text(f'UID{uid}', 166 + nickname_length + 36, 58,
                        fm.get('bahnschrift_regular', 48, 'Regular'),
                        '#252525')

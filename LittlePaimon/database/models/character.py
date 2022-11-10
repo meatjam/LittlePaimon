@@ -1,12 +1,11 @@
 import datetime
 import re
-from typing import Optional, List, Dict, Iterator
+from typing import Optional, Dict, Iterator
 
-from pydantic import BaseModel
 from tortoise import fields
 from tortoise.models import Model
 
-from LittlePaimon.config import JSON_DATA
+from LittlePaimon.utils.path import JSON_DATA
 from LittlePaimon.utils.alias import get_name_by_id
 from LittlePaimon.utils.files import load_json
 from LittlePaimon.utils.typing import *

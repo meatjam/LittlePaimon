@@ -1,17 +1,16 @@
 from nonebot import on_command
-from nonebot.params import CommandArg
-from nonebot.rule import Rule
 from nonebot.adapters.onebot.v11 import Message, MessageEvent, MessageSegment
+from nonebot.params import CommandArg
 from nonebot.plugin import PluginMetadata
+from nonebot.rule import Rule
+
 from LittlePaimon import SUPERUSERS
-from LittlePaimon.manager.plugin_manager import plugin_manager as pm
+from LittlePaimon.config import config
 from LittlePaimon.utils.brower import screenshot
 
 
 async def permission_check(event: MessageEvent) -> bool:
-    if pm.config.screenshot_enable:
-        return True
-    return event.user_id not in SUPERUSERS
+    return True if config.screenshot_enable else event.user_id not in SUPERUSERS
 
 
 __plugin_meta__ = PluginMetadata(
@@ -42,5 +41,3 @@ async def _(event: MessageEvent, msg: Message = CommandArg()):
         await screenshot_cmd.send(MessageSegment.image(img))
     except Exception:
         await screenshot_cmd.send('网页截图失败，无法访问该网页，请稍候再试')
-
-

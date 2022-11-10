@@ -1,41 +1,7 @@
-from typing import Optional, List
-
 from pydantic import BaseModel, Field
 
 
-class MatcherInfo(BaseModel):
-    pm_name: str
-    """命令名称"""
-    pm_description: Optional[str]
-    """命令描述"""
-    pm_usage: Optional[str]
-    """命令用法"""
-    pm_priority: int = 99
-    """命令优先级"""
-    pm_show: bool = True
-    """是否展示"""
-
-
-class PluginInfo(BaseModel):
-    name: str
-    """插件名称"""
-    module_name: str
-    """插件模块名称"""
-    description: Optional[str]
-    """插件描述"""
-    usage: Optional[str]
-    """插件用法"""
-    status: Optional[bool]
-    """插件状态（无用项）"""
-    show: bool = True
-    """是否展示"""
-    priority: int = 99
-    """展示优先级"""
-    matchers: Optional[List[MatcherInfo]] = []
-    """命令列表"""
-
-
-class Config(BaseModel):
+class ConfigModel(BaseModel):
     CookieWeb_enable: bool = Field(True, alias='启用CookieWeb')
     CookieWeb_url: str = Field('http://127.0.0.1:13579/LittlePaimon/cookie', alias='CookieWeb地址')
 
@@ -75,3 +41,14 @@ class Config(BaseModel):
     admin_enable: bool = Field(True, alias='启用Web端')
     admin_password: str = Field('admin', alias='Web端管理员密码')
     secret_key: str = Field('49c294d32f69b732ef6447c18379451ce1738922a75cd1d4812ef150318a2ed0', alias='Web端token密钥')
+
+    @property
+    def alias_dict(self):
+        return {v.alias: k for k, v in self.__fields__.items()}
+
+    def update(self, **kwargs):
+        for key, value in kwargs.items():
+            if key in self.__fields__:
+                self.__setattr__(key, value)
+            elif key in self.alias_dict:
+                self.__setattr__(self.alias_dict[key], value)

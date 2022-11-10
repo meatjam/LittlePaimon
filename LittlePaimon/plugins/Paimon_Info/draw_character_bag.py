@@ -3,13 +3,13 @@ import datetime
 import math
 from typing import List
 
-from LittlePaimon.config import RESOURCE_BASE_PATH
-from LittlePaimon.database.models import Character, PlayerInfo, Player
-from LittlePaimon.utils.files import load_image
+from LittlePaimon.database import Character, PlayerInfo, Player
 from LittlePaimon.utils.alias import get_chara_icon
+from LittlePaimon.utils.files import load_image
 from LittlePaimon.utils.genshin import GenshinTools
 from LittlePaimon.utils.image import PMImage, font_manager as fm
 from LittlePaimon.utils.message import MessageBuild
+from LittlePaimon.utils.path import RESOURCE_BASE_PATH
 from .draw_player_card import get_avatar, draw_weapon_icon
 
 RESOURCES = RESOURCE_BASE_PATH / 'chara_bag'
@@ -188,7 +188,7 @@ async def draw_chara_bag(player: Player, info: PlayerInfo, characters: List[Char
     # 签名和uid
     if info.signature:
         await img.text(info.signature, 165, 116, fm.get('hywh', 32), '#252525')
-        nickname_length = img.text_length(info.nickname, fm.get('hywh', 40))
+        nickname_length = img.text_length(info.nickname, fm.get('hywh', 48))
         await img.text(f'UID{player.uid}', 166 + nickname_length + 36, 58, fm.get('bahnschrift_regular', 48, 'Regular'),
                        '#252525')
     else:

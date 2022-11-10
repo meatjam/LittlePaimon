@@ -5,8 +5,12 @@ import hashlib
 import inspect
 import time
 from collections import defaultdict
-from LittlePaimon.utils import aiorequests, logger
-from LittlePaimon.config import RESOURCE_BASE_PATH
+from pathlib import Path
+
+from .logger import logger
+from .requests import aiorequests
+
+RESOURCE_BASE_PATH = Path() / 'resources' / 'LittlePaimon'
 
 
 class FreqLimiter:
