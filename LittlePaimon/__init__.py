@@ -1,23 +1,26 @@
 from pathlib import Path
 
-from nonebot import load_plugins, get_driver, logger, load_plugin
-from typing import List
-from LittlePaimon import database
+from nonebot import load_plugins, logger
+from LittlePaimon import database, web
+from LittlePaimon.utils import DRIVER, __version__, NICKNAME, SUPERUSERS
 from LittlePaimon.utils.tool import check_resource
 
-DRIVER = get_driver()
-__version__ = '3.0.0rc2'
+from typing import Dict, Any
+from tortoise.connection import ConnectionHandler
 
-try:
-    SUPERUSERS: List[int] = [int(s) for s in DRIVER.config.superusers]
-except Exception:
-    SUPERUSERS = []
-    logger.warning('请在.env.prod文件中中配置超级用户SUPERUSERS')
+DBConfigType = Dict[str, Any]
 
-try:
-    NICKNAME: str = list(DRIVER.config.nickname)[0]
-except Exception:
-    NICKNAME = '派蒙'
+
+async def _init(self, db_config: "DBConfigType", create_db: bool):
+    if self._db_config is None:
+        self._db_config = db_config
+    else:
+        self._db_config.update(db_config)
+    self._create_db = create_db
+    await self._init_connections()
+
+
+ConnectionHandler._init = _init
 
 logo = """<g>
 ██╗     ██╗████████╗████████╗██╗     ███████╗  ██████╗  █████╗ ██╗███╗   ███╗ ██████╗ ███╗   ██╗
@@ -32,11 +35,9 @@ logo = """<g>
 async def startup():
     logger.opt(colors=True).info(logo)
     await database.connect()
-    from LittlePaimon import web
     await check_resource()
 
 
 DRIVER.on_shutdown(database.disconnect)
-
 
 load_plugins(str(Path(__file__).parent / 'plugins'))
