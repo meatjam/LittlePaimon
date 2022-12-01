@@ -15,7 +15,7 @@ class ConfigModel(BaseModel):
     auto_myb_hour: int = Field(8, alias='米游币开始执行时间(小时)')
     auto_myb_minute: int = Field(0, alias='米游币开始执行时间(分钟)')
 
-    auto_sign_enable: bool = Field(True, alias='米游社自动签到开关')
+    auto_sign_enable: bool = Field(False, alias='米游社自动签到开关')
     auto_sign_hour: int = Field(0, alias='米游社签到开始时间(小时)')
     auto_sign_minute: int = Field(5, alias='米游社签到开始时间(分钟)')
 
@@ -36,7 +36,7 @@ class ConfigModel(BaseModel):
     auto_add_group: bool = Field(False, alias='自动接受群邀请')
     notice_event: bool = Field(True, alias='启用好友和群欢迎消息')
 
-    screenshot_enable: bool = Field(True, alias='启用网页截图权限')
+    screenshot_enable: bool = Field(False, alias='启用网页截图权限')
 
     guess_voice_time: int = Field(30, alias='原神猜语音时间')
 
@@ -44,6 +44,8 @@ class ConfigModel(BaseModel):
     admin_password: str = Field('admin', alias='Web端管理员密码')
     secret_key: str = Field('49c294d32f69b732ef6447c18379451ce1738922a75cd1d4812ef150318a2ed0', alias='Web端token密钥')
     admin_theme: Literal['default', 'antd', 'ang', 'dark'] = Field('default', alias='Web端主题')
+
+    command_alias_enable: bool = Field(True, alias='启用命令别名')
 
     @property
     def alias_dict(self):

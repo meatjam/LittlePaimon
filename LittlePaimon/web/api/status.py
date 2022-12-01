@@ -1,9 +1,10 @@
 import asyncio
-from typing import Union
+from typing import Union, Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Header
 from fastapi.responses import JSONResponse, StreamingResponse
 from nonebot.log import logger, default_filter, default_format
+from LittlePaimon.config import config
 from LittlePaimon.utils.status import get_status
 from .utils import authentication
 
@@ -31,8 +32,10 @@ logger.add(record_debug_log, level='DEBUG', colorize=True, filter=default_filter
 route = APIRouter()
 
 
-@route.get('/log', response_class=StreamingResponse)
-async def get_log(level: str = 'info', num: Union[int, str] = 100):
+@route.get('/log')
+async def get_log(token: Optional[str] = Header(...), level: str = 'info', num: Union[int, str] = 100):
+    if token != config.secret_key[:16]:
+        return '非法请求'
     show_logs = info_logs[-(num or 1):] if level == 'info' else debug_logs[-(num or 1):]
 
     async def streaming_logs():
@@ -41,6 +44,16 @@ async def get_log(level: str = 'info', num: Union[int, str] = 100):
             await asyncio.sleep(0.02)
 
     return StreamingResponse(streaming_logs())
+
+
+@route.get('/run_cmd')
+async def run_cmd(token: Optional[str] = Header(...), cmd: str = ''):
+    if token != config.secret_key[:16]:
+        return '非法请求'
+    if not cmd:
+        return '无效命令'
+    p = await asyncio.create_subprocess_shell(cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    return StreamingResponse(p.stdout or p.stderr)
 
 
 @route.get('/status', response_class=JSONResponse, dependencies=[authentication()])

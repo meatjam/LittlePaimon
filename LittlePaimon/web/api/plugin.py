@@ -5,12 +5,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from LittlePaimon.config import ConfigManager, PluginManager, PluginInfo
-from LittlePaimon.database import PluginPermission
-
-try:
-    from LittlePaimon.plugins.plugin_manager import cache_help
-except Exception:
-    cache_help = None
+from LittlePaimon.database import PluginDisable
 
 from .utils import authentication
 
@@ -32,25 +27,31 @@ async def get_plugins():
 
 @route.post('/set_plugin_status', response_class=JSONResponse, dependencies=[authentication()])
 async def set_plugin_status(data: dict):
-    module_name = data.get('plugin')
-    status = data.get('status')
-    if cache_help:
+    module_name: str = data.get('plugin')
+    status: bool = data.get('status')
+    try:
+        from LittlePaimon.plugins.plugin_manager import cache_help
         cache_help.clear()
-    await PluginPermission.filter(name=module_name).update(status=status)
+    except Exception:
+        pass
+    if status:
+        await PluginDisable.filter(name=module_name, global_disable=True).delete()
+    else:
+        await PluginDisable.create(name=module_name, global_disable=True)
     return {'status': 0, 'msg': f'成功设置{module_name}插件状态为{status}'}
 
 
 @route.get('/get_plugin_bans', response_class=JSONResponse, dependencies=[authentication()])
 async def get_plugin_status(module_name: str):
     result = []
-    bans = await PluginPermission.filter(name=module_name).all()
+    bans = await PluginDisable.filter(name=module_name).all()
     for ban in bans:
-        if ban.session_type == 'group':
-            result.extend(f'群{ban.session_id}.{b}' for b in ban.ban)
-            if not ban.status:
-                result.append(f'群{ban.session_id}')
-        elif ban.session_type == 'user' and not ban.status:
-            result.append(f'{ban.session_id}')
+        if ban.user_id and ban.group_id:
+            result.append(f'群{ban.group_id}.{ban.user_id}')
+        elif ban.group_id and not ban.user_id:
+            result.append(f'群{ban.group_id}')
+        elif ban.user_id and not ban.group_id:
+            result.append(f'{ban.user_id}')
     return {
         'status': 0,
         'msg':    'ok',
@@ -65,22 +66,22 @@ async def get_plugin_status(module_name: str):
 async def set_plugin_bans(data: dict):
     bans = data['bans']
     name = data['module_name']
-    await PluginPermission.filter(name=name).update(status=True, ban=[])
+    await PluginDisable.filter(name=name, global_disable=False).delete()
     for ban in bans:
         if ban.startswith('群'):
             if '.' in ban:
                 group_id = int(ban.split('.')[0][1:])
                 user_id = int(ban.split('.')[1])
-                plugin = await PluginPermission.filter(name=name, session_type='group', session_id=group_id).first()
-                plugin.ban.append(user_id)
-                await plugin.save()
+                await PluginDisable.create(name=name, group_id=group_id, user_id=user_id)
             else:
-                await PluginPermission.filter(name=name, session_type='group', session_id=int(ban[1:])).update(
-                    status=False)
+                await PluginDisable.create(name=name, group_id=int(ban[1:]))
         else:
-            await PluginPermission.filter(name=name, session_type='user', session_id=int(ban)).update(status=False)
-    if cache_help:
+            await PluginDisable.create(name=name, user_id=int(ban))
+    try:
+        from LittlePaimon.plugins.plugin_manager import cache_help
         cache_help.clear()
+    except Exception:
+        pass
     return {
         'status': 0,
         'msg':    '插件权限设置成功'
@@ -91,8 +92,11 @@ async def set_plugin_bans(data: dict):
 async def set_plugin_detail(plugin_info: PluginInfo):
     PluginManager.plugins[plugin_info.module_name] = plugin_info
     PluginManager.save()
-    if cache_help:
+    try:
+        from LittlePaimon.plugins.plugin_manager import cache_help
         cache_help.clear()
+    except Exception:
+        pass
     return {
         'status': 0,
         'msg':    '插件信息设置成功'
