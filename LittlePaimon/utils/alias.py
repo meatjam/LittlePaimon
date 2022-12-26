@@ -1,17 +1,35 @@
-import difflib
-from typing import Union, Literal, List, Optional
+import re
+from difflib import get_close_matches
+from typing import Union, Literal, List, Optional, Dict
 
 from .files import load_json
-from .path import JSON_DATA
+from .path import JSON_DATA, GACHA_RES
 
 alias_file = load_json(JSON_DATA / 'alias.json')
 info_file = load_json(JSON_DATA / 'genshin_info.json')
 weapon_file = load_json(JSON_DATA / 'weapon.json')
+item_type_file = load_json(GACHA_RES / 'type.json')
+type_file = load_json(JSON_DATA / '类型.json')
+
+WEAPON_TYPE_ALIAS = {
+    '单手剑': '单手剑',
+    '双手剑': '双手剑',
+    '大剑': '双手剑',
+    '长柄武器': '长柄武器',
+    '枪': '长柄武器',
+    '长枪': '长柄武器',
+    '长柄': '长柄武器',
+    '法器': '法器',
+    '法书': '法器',
+    '书': '法器',
+    '弓': '弓',
+    '弓箭': '弓'
+}
 
 
 def get_id_by_name(name: str) -> Optional[str]:
     """
-        根据角色名字获取角色的id
+    根据角色名字获取角色的id
         :param name: 角色名
         :return: id字符串
     """
@@ -23,7 +41,7 @@ def get_id_by_name(name: str) -> Optional[str]:
 
 def get_name_by_id(role_id: Union[str, int]) -> Optional[str]:
     """
-        根据角色id获取角色名
+    根据角色id获取角色名
         :param role_id: 角色id
         :return: 角色名字符串
     """
@@ -35,7 +53,7 @@ def get_name_by_id(role_id: Union[str, int]) -> Optional[str]:
 
 def get_alias_by_name(name: str) -> Optional[List[str]]:
     """
-        根据角色名字获取角色的别名
+    根据角色名字获取角色的别名
         :param name: 角色名
         :return: 别名列表
     """
@@ -43,42 +61,56 @@ def get_alias_by_name(name: str) -> Optional[List[str]]:
     return next((r for r in name_list.values() if name in r), None)
 
 
-def get_match_alias(msg: str, type: Literal['角色', '武器', '原魔', '圣遗物'] = '角色', single_to_dict: bool = False) -> Union[
-    str, list, dict]:
+ALIAS_TYPE = Literal['角色', '武器', '原魔', '圣遗物']
+
+
+def get_match_alias(name: str, types: Union[List[ALIAS_TYPE], ALIAS_TYPE] = None,
+                    one_to_list: bool = False) -> Union[
+    Dict[str, List[str]], List[str]]:
     """
-        根据字符串消息，获取与之相似或匹配的角色、武器、原魔名
-        :param msg: 消息
-        :param type: 匹配类型，有roles、weapons、monsters
-        :param single_to_dict: 是否将角色单结果也转换成{角色:id}字典
-        :return: 匹配的字符串、列表或字典
+    根据字符串消息，获取与之相似或匹配的角色、武器、原魔名
+        :param name: 名称
+        :param types: 匹配类型，有'角色', '武器', '原魔', '圣遗物'
+        :param one_to_list: 只有一种匹配结果时是否直接返回其列表
+        :return: 匹配结果
     """
-    alias_list = alias_file[type]
-    if msg in {'风主', '岩主', '雷主', '草主'}:
-        return msg
-    elif type == '角色':
-        possible = {}
-        for role_id, alias in alias_list.items():
-            match_list = difflib.get_close_matches(msg, alias, cutoff=0.6, n=3)
-            if msg in match_list:
-                return {alias[0]: role_id} if single_to_dict else alias[0]
-            elif match_list:
-                possible[alias[0]] = role_id
-        if len(possible) == 1:
-            return {list(possible.keys())[0]: possible[list(possible.keys())[0]]} if single_to_dict else \
-            list(possible.keys())[0]
-        return possible
-    elif type in {'武器', '圣遗物'}:
-        possible = []
-        for name, alias in alias_list.items():
-            match_list = difflib.get_close_matches(msg, alias, cutoff=0.4, n=3)
-            if msg in match_list:
-                return name
-            elif match_list:
-                possible.append(name)
-        return possible
-    elif type == '原魔':
-        match_list = difflib.get_close_matches(msg, alias_list, cutoff=0.4, n=5)
-        return match_list[0] if len(match_list) == 1 else match_list
+    if types is None:
+        types = ['角色']
+    elif isinstance(types, str):
+        types = [types]
+    matches = {}
+    for type in types:
+        alias_list = alias_file[type]
+        matches[type] = []
+        if type == '角色':
+            if name.startswith(('风', '岩', '雷', '草', '水', '火', '冰')) and name.endswith(
+                    ('主', '主角', '空', '荧', '旅行者')):
+                matches[type].append(name if name.endswith(('空', '荧')) else f'{name[0]}荧')
+            else:
+                for alias in alias_list.values():
+                    if name in alias:
+                        if len(types) == 1 and one_to_list:
+                            return [alias[0]]
+                        matches[type].append(alias[0])
+                        break
+                    if get_close_matches(name, alias, cutoff=0.6, n=3):
+                        matches[type].append(alias[0])
+        elif type in {'武器', '圣遗物'}:
+            for raw_name, alias in alias_list.items():
+                if name in alias:
+                    matches[type].append(raw_name)
+                    break
+                else:
+                    if get_close_matches(name, alias, cutoff=0.6, n=3):
+                        matches[type].append(raw_name)
+        elif type == '原魔':
+            matches[type] = get_close_matches(name, alias_list, cutoff=0.4, n=5)
+        if not matches[type]:
+            del matches[type]
+    if one_to_list and len(matches) == 1:
+        return list(matches.values())[0]
+    else:
+        return matches
 
 
 def get_chara_icon(name: Optional[str] = None, chara_id: Optional[int] = None,
@@ -96,6 +128,7 @@ def get_chara_icon(name: Optional[str] = None, chara_id: Optional[int] = None,
         side_icon = info['SideIconName']
     else:
         return None
+    # UI_AvatarIcon_Side_Wanderer
     if icon_type == 'side':
         return side_icon
     elif icon_type == 'avatar':
