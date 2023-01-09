@@ -21,7 +21,7 @@ from LittlePaimon.utils.typing import COMMAND_START_RE
 from .draw_daily_material import draw_material
 from .draw_map import init_map, draw_map, get_full_map
 from .SereniteaPot import draw_pot_materials
-from .Atlas import get_match_card, get_card_resources, get_match_specialty, get_all_specialty
+from .Atlas import get_match_card, get_card_resources, get_match_specialty, get_all_specialty, get_atlas_full_path
 from .wiki_api import API
 
 __plugin_meta__ = PluginMetadata(
@@ -55,12 +55,6 @@ total_wiki = on_regex(
         'pm_usage':       '<对象名><图鉴|攻略|材料>',
         'pm_priority':    1
     })
-# material_map = on_command('材料图鉴', priority=11, block=True, state={
-#     'pm_name':        '材料图鉴',
-#     'pm_description': '查看某个材料的介绍和采集点。',
-#     'pm_usage':       '材料图鉴<材料名>[地图]',
-#     'pm_priority':    2
-# })
 material_map_full = on_command('材料地图', priority=8, block=True, state={
     'pm_name':        '材料地图',
     'pm_description': '查看多个材料大地图采集点。\n示例：材料地图 鸣草 鬼兜虫 提瓦特',
@@ -88,39 +82,6 @@ card_wiki_list = on_command('七圣召唤列表', aliases={'七圣召唤卡牌�
         'pm_priority':    6
     })
 
-
-# @material_map.handle()
-# async def _(event: MessageEvent, state: T_State, msg: Message = CommandArg()):
-#     if params := msg.extract_plain_text().strip():
-#         params = params.split(' ')
-#         state['name'] = Message(params[0])
-#         if len(params) > 1:
-#             if params[1] in {'提瓦特', '层岩巨渊', '渊下宫'}:
-#                 state['map'] = params[1]
-#         else:
-#             state['map'] = Message('提瓦特')
-#     else:
-#         state['map'] = Message('提瓦特')
-
-
-# @material_map.got('map', prompt='地图名称有误，请在【提瓦特、层岩巨渊、渊下宫】中选择，或回答【取消】退出',
-#                   parameterless=cancel)
-# async def _(event: MessageEvent, state: T_State, map_: str = ArgPlainText('map')):
-#     if map_ not in {'提瓦特', '层岩巨渊', '渊下宫'}:
-#         await material_map.reject('地图名称有误，请在【提瓦特、层岩巨渊、渊下宫】中选择')
-#     else:
-#         state['map'] = Message(map_)
-#
-#
-# @material_map.got('name', prompt='请输入要查询的材料名称，或回答【取消】退出',
-#                   parameterless=cancel)
-# async def _(event: MessageEvent, map_: str = ArgPlainText('map'), name: str = ArgPlainText('name')):
-#     if (file_path := RESOURCE_BASE_PATH / 'genshin_map' / 'results' / f'{map_}_{name}.png').exists():
-#         await material_map.finish(MessageSegment.image(file_path), at_sender=True)
-#     else:
-#         await material_map.send(MessageBuild.Text(f'开始查找{name}的资源点，请稍候...'))
-#         result = await draw_map(name, map_)
-#         await material_map.finish(result, at_sender=True)
 
 
 @material_map_full.handle()
@@ -187,6 +148,8 @@ async def _(state: T_State, regex_dict: dict = RegexDict()):
         type = f'角色{type[2:]}'
     elif type.startswith('武器'):
         type = '武器图鉴'
+    elif type.startswith('圣遗物'):
+        type = '圣遗物图鉴'
     elif type.startswith(('材料', '特产')) and type != '材料':
         type = '特产图鉴'
     elif type.startswith(('原魔', '怪物')):
@@ -240,9 +203,9 @@ async def _(bot: Bot, event: MessageEvent, state: T_State, type: str = Arg('type
         elif type.startswith('角色') or type in {'参考面板', '收益曲线'}:
             if name == '全部':
                 matches = type_file['角色']['元素类型']
-            elif re.match('[火水冰雷风岩草](元素|属性)?', name):
+            elif re.match('^[火水冰雷风岩草](元素|属性|系)?$', name):
                 matches = {'角色': type_file['角色']['元素类型'][name[0]]}
-            elif re.match('|'.join(WEAPON_TYPE_ALIAS.keys()), name):
+            elif re.match('^' + '|'.join(WEAPON_TYPE_ALIAS.keys()) + '$', name):
                 matches = {'角色': type_file['角色']['武器类型'][WEAPON_TYPE_ALIAS[name]]}
             elif alias := await PlayerAlias.get_or_none(user_id=str(event.user_id), alias=name):
                 final_name = alias.character
@@ -258,25 +221,25 @@ async def _(bot: Bot, event: MessageEvent, state: T_State, type: str = Arg('type
         elif type.startswith('武器'):
             if name == '全部':
                 matches = type_file['武器']
-            elif re.match('|'.join(WEAPON_TYPE_ALIAS.keys()), name):
+            elif re.match('^' + '|'.join(WEAPON_TYPE_ALIAS.keys()) + '$', name):
                 matches = {'武器': type_file['武器'][WEAPON_TYPE_ALIAS[name]]}
             else:
                 matches = get_match_alias(name, '武器')
         elif type.startswith('原魔'):
-            matches = {'原魔': alias_file['原魔']} if name == '全部' else get_match_alias(name, '原魔')
+            matches = {'原魔': list(alias_file['原魔'].keys())} if name == '全部' else get_match_alias(name, '原魔')
         elif type.startswith('圣遗物'):
             matches = {'圣遗物': list(alias_file['圣遗物'].keys())} if name == '全部' else get_match_alias(name, '圣遗物')
         elif type.startswith('七圣召唤'):
             if name == '全部':
                 matches = await get_match_card(name)
-            else:
-                matches = {'七圣召唤': await get_match_card(name)}
-        elif type == '特产图鉴':
-            matches = {'特产': await get_match_specialty(name)}
+            elif c := await get_match_card(name):
+                matches = {'七圣召唤': c}
+        elif type == '特产图鉴' and (s := await get_match_specialty(name)):
+            matches = {'特产': s}
         else:
-            if re.match('[火水冰雷风岩草](元素|属性)?', name):
+            if re.match('^[火水冰雷风岩草](元素|属性|系)?$', name):
                 matches = {'角色': type_file['角色']['元素类型'][name[0]]}
-            elif re.match('|'.join(WEAPON_TYPE_ALIAS.keys()), name):
+            elif re.match('^' + '|'.join(WEAPON_TYPE_ALIAS.keys()) + '$', name):
                 matches = {'角色': type_file['角色']['武器类型'][WEAPON_TYPE_ALIAS[name]],
                            '武器': type_file['武器'][WEAPON_TYPE_ALIAS[name]]}
             elif alias := await PlayerAlias.get_or_none(user_id=str(event.user_id), alias=name):
@@ -289,18 +252,24 @@ async def _(bot: Bot, event: MessageEvent, state: T_State, type: str = Arg('type
                 except ActionFailed:
                     await total_wiki.finish(f'{final_name}的{type}发送失败，可能是网络问题或者不存在该资源')
             else:
-                matches = get_match_alias(name, ['角色', '武器', '原魔', '圣遗物'])
-                if m := await get_match_card(name):
-                    matches['七圣召唤'] = m
+                if type == '材料':
+                    matches = get_match_alias(name, ['角色', '武器', '原魔'])
+                else:
+                    matches = get_match_alias(name, ['角色', '武器', '原魔', '圣遗物'])
+                    if m := await get_match_card(name):
+                        matches['七圣召唤'] = m
                 if s := await get_match_specialty(name):
                     matches['特产'] = s
         if not matches:
-            await total_wiki.finish(MessageBuild.Text(f'没有名为{name}的{type}哦，是不是打错了~'), at_sender=True)
+            # await total_wiki.finish(MessageBuild.Text(f'没有名为{name}的{type}哦，是不是打错了~'), at_sender=True)
+            await total_wiki.finish()
         elif len(matches) == 1 and len(list(matches.values())[0]) == 1:
             final_name = list(matches.values())[0][0]
             temp_type = list(matches.keys())[0]
             if type in {'材料', '攻略', '图鉴'}:
                 type = f'{temp_type}图鉴' if temp_type != '角色' else f'{temp_type}{type}'
+            if type == '七圣召唤图鉴':
+                final_name = (await get_atlas_full_path(final_name, 'card')).replace('/card/', '').rstrip('.png')
             try:
                 await total_wiki.finish(
                     MessageSegment.image(API[type].format(proxy=config.github_proxy, name=final_name)))
@@ -368,13 +337,15 @@ async def _(state: T_State, matches: dict = Arg('matches'), choice: str = ArgPla
                 type = f'{key}图鉴' if key != '角色' else f'{key}{type}'
             break
     if final_name:
+        if type == '七圣召唤图鉴':
+            final_name = (await get_atlas_full_path(final_name, 'card')).replace('/card/', '').rstrip('.png')
         try:
             await total_wiki.finish(
                 MessageSegment.image(API[type].format(proxy=config.github_proxy, name=final_name)))
         except ActionFailed:
             await total_wiki.finish(f'{final_name}的{type}发送失败，可能是网络问题或者不存在该资源')
     elif state['times'] == 2:
-        await total_wiki.finish(f'旅行者似乎不太能理解，下次再问我吧{MessageSegment.face(146)}')
+        await total_wiki.finish('旅行者似乎不太能理解，下次再问我吧' + MessageSegment.face(146))
     else:
         state['times'] = state['times'] + 1
         await total_wiki.reject(f'请旅行者从上面的{type}中选一个问{NICKNAME}或回答\"取消\"可以取消查询', at_sender=True)
