@@ -2,7 +2,6 @@ name: 原神语音合成
 module_name: Genshin_AIVoice
 description: 原神语音合成
 usage: '...'
-status:
 show: true
 priority: 8
 matchers:

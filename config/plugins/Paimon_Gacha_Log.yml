@@ -3,7 +3,6 @@ module_name: Paimon_Gacha_Log
 description: 小派蒙的原神抽卡记录模块
 usage: 1.[获取抽卡记录 (uid) (url)]提供url，获取原神抽卡记录，需要一定时间2.[查看抽卡记录 (uid)]查看抽卡记录分析3.[导出抽卡记录
   (uid) (xlsx/json)]导出抽卡记录文件，上传到群文件中
-status: true
 show: true
 priority: 10
 matchers:

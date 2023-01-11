@@ -2,7 +2,6 @@ name: 云原神
 module_name: Paimon_CloudGenshin
 description: 云原神
 usage: '...'
-status: true
 show: true
 priority: 16
 matchers:

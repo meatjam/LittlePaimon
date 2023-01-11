@@ -2,7 +2,6 @@ name: 原神信息查询
 module_name: Paimon_Info
 description: 原神信息查询
 usage: '...'
-status: true
 show: true
 priority: 1
 matchers:

@@ -2,7 +2,6 @@ name: 原神语音
 module_name: Genshin_Voice
 description: 原神语音
 usage: 原神猜语音
-status: true
 show: true
 priority: 6
 matchers:

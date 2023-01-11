@@ -2,7 +2,6 @@ name: 原神模拟抽卡
 module_name: Paimon_Gacha
 description: 原神模拟抽卡
 usage: 抽[数量]十连[卡池]
-status: true
 show: true
 priority: 9
 matchers:

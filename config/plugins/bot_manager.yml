@@ -2,7 +2,6 @@ name: 机器人管理
 module_name: bot_manager
 description: 机器人管理
 usage: '...'
-status:
 show: false
 priority: 16
 matchers:

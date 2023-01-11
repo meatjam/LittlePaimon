@@ -2,7 +2,6 @@ name: 原神深渊查询
 module_name: Paimon_Abyss
 description: 原神深渊查询
 usage: '...'
-status: true
 show: true
 priority: 2
 matchers:

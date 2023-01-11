@@ -2,7 +2,6 @@ name: 米游社签到及获取
 module_name: Paimon_Autobbs
 description: 米游社
 usage: mys签到
-status: true
 show: true
 priority: 11
 matchers:

@@ -1,6 +1,6 @@
 启用CookieWeb: true
 CookieWeb地址: http://127.0.0.1:13579/LittlePaimon/cookie
-模拟抽卡群冷却: 5
+模拟抽卡群冷却: 51
 模拟抽卡群员冷却: 5
 模拟抽卡单次最多十连数: 5
 米游币自动获取开关: true
@@ -27,3 +27,4 @@ ysd自动更新小时: 6
 启用Web端: true
 Web端管理员密码: admin
 Web端token密钥: 49c294d32f69b732ef6447c18379451ce1738922a75cd1d4812ef150318a2ed0
+github资源地址: https://github.91chi.fun/

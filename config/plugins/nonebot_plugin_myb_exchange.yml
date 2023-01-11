@@ -2,7 +2,6 @@ name: 米游币商品自动兑换插件
 module_name: nonebot_plugin_myb_exchange
 description: 录入米游币兑换计划，Bot会在对应时间自动帮你抢兑商品
 usage: "myb 跟随Bot的指引录入兑换计划\nmyb_info 查看当前的兑换计划\nmyb_delete 删除你的所有兑换计划\n"
-status: true
 show: true
 priority: 99
 matchers:

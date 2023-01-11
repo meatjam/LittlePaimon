@@ -2,7 +2,6 @@ name: 原神绑定
 module_name: Paimon_Bind
 description: 原神绑定信息
 usage: ysb
-status: true
 show: true
 priority: 2
 matchers:
@@ -35,4 +34,9 @@ matchers:
   pm_description: 清除所有已退群或已删好友的用户的cookie、订阅等信息，仅超级管理员可用
   pm_usage: 清除无效用户
   pm_priority: 6
+  pm_show: true
+- pm_name: 原神扫码绑定
+  pm_description: 通过米游社扫码的方式绑定原神Cookie
+  pm_usage: 原神扫码绑定
+  pm_priority: 1
   pm_show: true
