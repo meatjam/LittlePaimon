@@ -1,6 +1,21 @@
-from amis import Action, Divider, Form, InputText, LevelEnum, Page, PageSchema, Switch, Remark, InputNumber, InputTime, \
-    InputTimeRange, Alert, Editor, \
-    Select
+from amis import (
+    Action,
+    Divider,
+    Form,
+    InputText,
+    LevelEnum,
+    Page,
+    PageSchema,
+    Switch,
+    Remark,
+    InputNumber,
+    InputTime,
+    InputTimeRange,
+    Alert,
+    Editor,
+    Select,
+    InputTag
+)
 
 action_button = [Action(label='保存', level=LevelEnum.success, type='submit'),
                  Action(label='重置', level=LevelEnum.warning, type='reset')]
@@ -287,6 +302,16 @@ other_form = Form(
                                content='开启时，会将制图所需的图片资源加载到内存中进行缓存，以提高制图速度，如果机器内存较小，建议关闭'),
             onText='开启',
             offText='关闭'
+        ),
+        InputTag(
+                label='启用重启时修改群名片群列表',
+                name='启用重启时修改群名片群列表',
+                value='${启用重启时修改群名片群列表}',
+                enableBatchAdd=True,
+                placeholder='添加启用群名片修改的群号',
+                joinValues=False, 
+                extractValue=True,
+                labelRemark=Remark(shape='circle', content='这些群会在重启时在bot自己的群名片中增加"重启中"作为提示，在重启完成后修改回来')
         ),
         Switch(
             label='网页截图权限',

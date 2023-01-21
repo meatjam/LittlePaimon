@@ -39,6 +39,7 @@ class Result(IntEnum):
     Repeat = auto()
     Ban = auto()
     SetEnable = auto()
+    SetDisable = auto()
 
 
 class LearningChat:
@@ -75,14 +76,19 @@ class LearningChat:
         self.ban_words = set(chat_config.ban_words + self.config.ban_words)
 
     async def _learn(self) -> Result:
-        # logger.debug('群聊学习', f'收到来自群<m>{self.data.group_id}</m>的消息<m>{self.data.message}</m>')
-        if not chat_config.total_enable or not self.config.enable:
+        if self.to_me and any(
+                w in self.data.message for w in {'学说话', '快学', '开启学习'}):
+            return Result.SetEnable
+        elif self.to_me and any(
+                w in self.data.message for w in {'闭嘴', '别学', '关闭学习'}):
+            return Result.SetDisable
+        elif not chat_config.total_enable or not self.config.enable:
             logger.debug('群聊学习', f'➤该群<m>{self.data.group_id}</m>未开启群聊学习，跳过')
             # 如果未开启群聊学习，跳过
             return Result.Pass
         elif command_start_ and self.data.message.startswith(tuple(command_start_)):
             # 以命令前缀开头的消息，跳过
-            logger.debug('群聊学习', '➤消息以命令前缀开头，跳过')
+            logger.debug('群聊学习', '➤该消息以命令前缀开头，跳过')
             return Result.Pass
         elif self.data.user_id in self.ban_users:
             # 发言人在屏蔽列表中，跳过
@@ -91,9 +97,6 @@ class LearningChat:
         elif self.to_me and any(w in self.data.message for w in {'不可以', '达咩', '不能说这'}):
             # 如果是对某句话进行禁言
             return Result.Ban
-        elif self.to_me and any(
-                w in self.data.message for w in {'学说话', '快学', '开启学习', '闭嘴', '别学', '关闭学习'}):
-            return Result.SetEnable
         elif not await self._check_allow(self.data):
             # 本消息不合法，跳过
             logger.debug('群聊学习', '➤消息未通过校验，跳过')
@@ -158,20 +161,16 @@ class LearningChat:
                 return [random.choice(SORRY_WORDS)]
             else:
                 return [random.choice(DOUBT_WORDS)]
-        elif result == Result.SetEnable:
+        elif result in [Result.SetEnable, Result.SetDisable]:
+            # 检查权限
             if self.role not in {'superuser', 'admin', 'owner'}:
                 return [random.choice(NO_PERMISSION_WORDS)]
-            # 检查权限
-            if any(w in self.data.message for w in {'学说话', '快学', '开启学习'}):
-                self.config.update(enable=True)
-                config_manager.config.group_config[self.data.group_id] = self.config
-                config_manager.save()
-                return [random.choice(ENABLE_WORDS)]
-            else:
-                self.config.update(enable=False)
-                config_manager.config.group_config[self.data.group_id] = self.config
-                config_manager.save()
-                return [random.choice(DISABLE_WORDS)]
+            self.config.update(enable=(result == Result.SetEnable))
+            config_manager.config.group_config[self.data.group_id] = self.config
+            config_manager.save()
+            logger.info('群聊学习',
+                        f'群<m>{self.data.group_id}</m>{"开启" if result == Result.SetEnable else "关闭"}学习功能')
+            return [random.choice(ENABLE_WORDS if result == Result.SetEnable else DISABLE_WORDS)]
         elif result == Result.Pass:
             # 跳过
             return None
@@ -179,7 +178,7 @@ class LearningChat:
             if await ChatMessage.filter(group_id=self.data.group_id,
                                         time__gte=self.data.time - 3600).limit(
                 self.config.repeat_threshold + 5).filter(
-                    user_id=self.bot_id, message=self.data.message).exists():
+                user_id=self.bot_id, message=self.data.message).exists():
                 # 如果在阈值+5条消息内，bot已经回复过这句话，则跳过
                 logger.debug('群聊学习', '➤➤已经复读过了，跳过')
                 return None
@@ -374,6 +373,7 @@ class LearningChat:
         logger.debug('群聊学习', f'主动发言：群热度排行<m>{">>".join([str(g[0]) for g in popularity])}</m>')
         for group_id, messages in popularity:
             if len(messages) < 30:
+                logger.debug('群聊学习', f'主动发言：群<m>{group_id}</m>消息小于30条，不发言')
                 continue
 
             config = config_manager.get_group_config(group_id)
@@ -382,71 +382,87 @@ class LearningChat:
                                                             '[CQ:share'])
 
             # 是否开启了主动发言
-            if not config.speak_enable:
+            if not config.speak_enable or not config.enable:
+                logger.debug('群聊学习', f'主动发言：群<m>{group_id}</m>未开启，不发言')
                 continue
 
             # 如果最后一条消息是自己发的，则不主动发言
-            last_reply = await ChatMessage.filter(group_id=group_id, user_id=self_id).first()
-            if last_reply and last_reply.time >= messages[0].time:
-                continue
+            if last_reply := await ChatMessage.filter(group_id=group_id, user_id=self_id).first():
+                if last_reply.time >= messages[0].time:
+                    logger.debug('群聊学习',
+                                 f'主动发言：群<m>{group_id}</m>最后一条消息是{NICKNAME}发的{last_reply.message}，不发言')
+                    continue
+                elif cur_time - last_reply.time < config.speak_min_interval:
+                    logger.debug('群聊学习', f'主动发言：群<m>{group_id}</m>上次主动发言时间小于主动发言最小间隔，不发言')
+                    continue
 
             # 该群每多少秒发一条消息
             avg_interval = (messages[0].time - messages[-1].time) / len(messages)
             # 如果该群已沉默的时间小于阈值，则不主动发言
-            if cur_time - messages[0].time < avg_interval * config.speak_threshold + config.speak_min_interval:
+            silent_time = cur_time - messages[0].time
+            threshold = avg_interval * config.speak_threshold
+            if silent_time < threshold:
+                logger.debug('群聊学习',
+                             f'主动发言：群<m>{group_id}</m>已沉默时间({silent_time})小于阈值({int(threshold)})，不发言')
                 continue
 
             if contexts := await ChatContext.filter(count__gte=config.answer_threshold).all():
                 speak_list = []
                 # context = random.choices(contexts, weights=[context.count for context in contexts])[0]
-                contexts.sort(key=lambda x: x.count)
+                # contexts.sort(key=lambda x: x.count, reverse=True)
+                random.shuffle(contexts)
                 for context in contexts:
-                    if (random.random() < config.speak_continuously_probability or not len(speak_list)) and len(
-                            speak_list) < config.speak_continuously_max_len and (
-                            answers := await ChatAnswer.filter(context=context,
-                                                               group_id=group_id,
-                                                               count__gte=config.answer_threshold)):
-                        answer = random.choices(answers,
-                                                weights=[answer.count + 1 if answer.time >= today_time else answer.count
-                                                         for answer in answers])[0]
-                        message = random.choice(answer.messages)
-                        if len(message) < 2:
-                            continue
-                        if message.startswith('&#91;') and message.endswith('&#93;'):
-                            continue
-                        if any(word in message for word in ban_words):
-                            continue
-                        speak_list.append(message)
-                        while random.random() < config.speak_continuously_probability and len(
-                                speak_list) < config.speak_continuously_max_len:
-                            if (follow_context := await ChatContext.filter(keywords=answer.keywords).first()) and (
-                                    follow_answers := await ChatAnswer.filter(
-                                        group_id=group_id,
-                                        context=follow_context,
-                                        count__gte=config.answer_threshold)):
-                                answer = random.choices(follow_answers,
-                                                        weights=[a.count + 1 if a.time >= today_time else a.count
-                                                                 for a in follow_answers])[0]
-                                message = random.choice(answer.messages)
-                                if len(message) < 2:
-                                    continue
-                                if message.startswith('&#91;') and message.endswith('&#93;'):
-                                    continue
-                                if all(word not in message for word in ban_words):
-                                    speak_list.append(message)
-                            else:
-                                break
+                    if (not speak_list or random.random() < config.speak_continuously_probability) and len(
+                            speak_list) < config.speak_continuously_max_len:
+                        if answers := await ChatAnswer.filter(context=context,
+                                                              group_id=group_id,
+                                                              count__gte=config.answer_threshold):
+                            answer = random.choices(answers,
+                                                    weights=[
+                                                        answer.count + 1 if answer.time >= today_time else answer.count
+                                                        for answer in answers])[0]
+                            message = random.choice(answer.messages)
+                            if len(message) < 2:
+                                continue
+                            if message.startswith('&#91;') and message.endswith('&#93;'):
+                                continue
+                            if any(word in message for word in ban_words):
+                                continue
+                            speak_list.append(message)
+                            follow_answer = answer
+                            while random.random() < config.speak_continuously_probability and len(
+                                    speak_list) < config.speak_continuously_max_len:
+                                if (follow_context := await ChatContext.filter(
+                                        keywords=follow_answer.keywords).first()) and (
+                                        follow_answers := await ChatAnswer.filter(
+                                            group_id=group_id,
+                                            context=follow_context,
+                                            count__gte=config.answer_threshold)):
+                                    follow_answer = random.choices(follow_answers,
+                                                                   weights=[
+                                                                       a.count + 1 if a.time >= today_time else a.count
+                                                                       for a in follow_answers])[0]
+                                    message = random.choice(follow_answer.messages)
+                                    if len(message) < 2:
+                                        continue
+                                    if message.startswith('&#91;') and message.endswith('&#93;'):
+                                        continue
+                                    if all(word not in message for word in ban_words):
+                                        speak_list.append(message)
+                                else:
+                                    break
                     else:
                         break
                 if speak_list:
-                    # logger.debug('群聊学习', f'主动发言：将向群<m>{group_id}</m>主动发言<m>{" ".join(speak_list)}</m>')
                     if random.random() < config.speak_poke_probability:
                         last_speak_users = {message.user_id for message in messages[:5] if message.user_id != self_id}
                         select_user = random.choice(list(last_speak_users))
                         speak_list.append(MessageSegment('poke', {'qq': select_user}))
                     return group_id, speak_list
-            else:
-                return None
+                else:
+                    logger.debug('群聊学习', f'主动发言：群<m>{group_id}</m>没有找到符合条件的发言，不发言')
+            logger.debug('群聊学习', '主动发言：没有符合条件的群，不主动发言')
+            return None
 
     async def _set_answer(self, message: ChatMessage):
         if context := await ChatContext.filter(keywords=message.keywords).first():
@@ -481,21 +497,16 @@ class LearningChat:
 
     async def _check_allow(self, message: Union[ChatMessage, ChatAnswer]) -> bool:
         raw_message = message.message if isinstance(message, ChatMessage) else message.messages[0]
-        if len(raw_message) < 2:
-            return False
+        # if len(raw_message) < 2:
+        #     return False
         if any(i in raw_message for i in
                {'[CQ:xml', '[CQ:json', '[CQ:at', '[CQ:video', '[CQ:record', '[CQ:share'}):
-            # logger.debug('群聊学习', f'➤检验<m>{keywords}</m><r>不通过</r>')
             return False
         if any(i in raw_message for i in self.ban_words):
-            # logger.debug('群聊学习', f'➤检验<m>{keywords}</m><r>不通过</r>')
             return False
         if raw_message.startswith('&#91;') and raw_message.endswith('&#93;'):
-            # logger.debug('群聊学习', f'➤检验<m>{keywords}</m><r>不通过</r>')
             return False
         if ban_word := await ChatBlackList.filter(keywords=message.keywords).first():
             if ban_word.global_ban or message.group_id in ban_word.ban_group_id:
-                # logger.debug('群聊学习', f'➤检验<m>{keywords}</m><r>不通过</r>')
                 return False
-        # logger.debug('群聊学习', f'➤检验<m>{keywords}</m><g>通过</g>')
         return True
