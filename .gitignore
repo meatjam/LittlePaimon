@@ -147,3 +147,4 @@ resources
 !LittlePaimon/config/data
 /resources/
 /LittlePaimon-Bot/go-cqhttp/config.yml
+/config/paimon_config.yml
