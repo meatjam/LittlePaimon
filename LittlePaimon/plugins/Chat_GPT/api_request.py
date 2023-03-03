@@ -22,7 +22,7 @@ def get_completions(prompt: str, max_tokens: int = 500, temperature: int = 1):
     return text
 
 
-def get_chat_completions(content: str, max_tokens: int = 4096, temperature: int = 1):
+def get_chat_completions(content: str, max_tokens: int = None, temperature: int = 1):
     result = session.post(f'{BASE_URL}/chat/completions', json={
         "model": "gpt-3.5-turbo-0301",  # 该模型是GPT-3中最强的模型
         "messages": [{"role": "user", "content": content}],  # 用户说的话
