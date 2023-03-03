@@ -35,24 +35,24 @@ chat_gpt = on_command('chat', priority=8, block=True, rule=to_me(), state={
     'pm_priority': 3
 })
 
-is_thinking = False
+# is_thinking = False
 
 
 @chat_gpt.handle()
 async def _(event: Union[GroupMessageEvent, PrivateMessageEvent], msg: Message = CommandArg()):
-    global is_thinking
+    # global is_thinking
     if not event.to_me:
         return
-    if is_thinking:
-        await chat_gpt.finish('正在思考中......（一次只能一条哦，请等待回复后再发送。）')
-        return
+    # if is_thinking:
+    #     await chat_gpt.finish('正在思考中......（一次只能一条哦，请等待回复后再发送。）')
+    #     return
     msg = msg.extract_plain_text().strip()
-    is_thinking = True
+    # is_thinking = True
     try:
         await chat_gpt.finish(await get_chat_completions(msg))
     except FinishedException:
         pass
     except Exception as e:
         await chat_gpt.finish(f'出错了，请稍后重试。{e}')
-    finally:
-        is_thinking = False
+    # finally:
+    #     is_thinking = False
