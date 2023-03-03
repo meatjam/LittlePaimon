@@ -2,10 +2,10 @@ from LittlePaimon.config import config
 # from requests import session
 from requests_async import Session
 
-BASE_URL = 'https://api.openai.com/v1'
+session = Session()
+session.headers = {'authorization': f'Bearer {config.chatGPT_APIKEY}'}
 
-async with Session() as session:
-    session.headers = {'authorization': f'Bearer {config.chatGPT_APIKEY}'}
+BASE_URL = 'https://api.openai.com/v1'
 
 
 async def get_completions(prompt: str, max_tokens: int = 500, temperature: int = 1):
