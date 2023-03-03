@@ -2,13 +2,17 @@ from LittlePaimon.config import config
 # from requests import session
 from requests_async import Session
 
-session = Session()
-session.headers = {'authorization': f'Bearer {config.chatGPT_APIKEY}'}
-
 BASE_URL = 'https://api.openai.com/v1'
 
 
+async def get_session():
+    session = Session()
+    session.headers = {'authorization': f'Bearer {config.chatGPT_APIKEY}'}
+    return session
+
+
 async def get_completions(prompt: str, max_tokens: int = 500, temperature: int = 1):
+    session = await get_session()
     result = await session.post(f'{BASE_URL}/completions', json={
         "model": "text-davinci-003",  # 该模型是GPT-3中最强的模型
         "prompt": prompt,  # 用户说的话
@@ -26,6 +30,7 @@ async def get_completions(prompt: str, max_tokens: int = 500, temperature: int =
 
 
 async def get_chat_completions(content: str, max_tokens: int = None, temperature: int = 1):
+    session = await get_session()
     result = await session.post(f'{BASE_URL}/chat/completions', json={
         "model": "gpt-3.5-turbo-0301",  # 该模型是GPT-3中最强的模型
         "messages": [{"role": "user", "content": content}],  # 用户说的话
