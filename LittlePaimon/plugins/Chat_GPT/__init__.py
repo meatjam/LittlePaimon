@@ -7,7 +7,7 @@ from nonebot.adapters.onebot.v11 import Message, GroupMessageEvent, PrivateMessa
 from nonebot.params import CommandArg
 from nonebot.rule import to_me
 
-from LittlePaimon.plugins.Chat_GPT.api_request import get_completions
+from LittlePaimon.plugins.Chat_GPT.api_request import get_completions, get_chat_completions
 from LittlePaimon.utils.message import CommandCharacter, CommandLang, MessageBuild
 
 
@@ -49,7 +49,7 @@ async def _(event: Union[GroupMessageEvent, PrivateMessageEvent], msg: Message =
     msg = msg.extract_plain_text().strip()
     is_thinking = True
     try:
-        await chat_gpt.finish(get_completions(msg))
+        await chat_gpt.finish(get_chat_completions(msg))
     except FinishedException:
         pass
     except Exception as e:
