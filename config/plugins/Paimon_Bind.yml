@@ -40,3 +40,8 @@ matchers:
   pm_usage: 原神扫码绑定
   pm_priority: 1
   pm_show: true
+- pm_name: 刷新ck
+  pm_description: 如果你的cookie疑似失效了，可尝试使用该指令刷新cookie
+  pm_usage: 刷新ck
+  pm_priority: 7
+  pm_show: true
