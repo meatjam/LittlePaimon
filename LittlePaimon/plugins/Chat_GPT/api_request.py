@@ -1,18 +1,21 @@
 from LittlePaimon.config import config
-from requests import session
+# from requests import session
+from requests_async import Session
 
-session = session()
-session.headers = {'authorization': f'Bearer {config.chatGPT_APIKEY}'}
 BASE_URL = 'https://api.openai.com/v1'
 
+async with Session() as session:
+    session.headers = {'authorization': f'Bearer {config.chatGPT_APIKEY}'}
 
-def get_completions(prompt: str, max_tokens: int = 500, temperature: int = 1):
-    result = session.post(f'{BASE_URL}/completions', json={
+
+async def get_completions(prompt: str, max_tokens: int = 500, temperature: int = 1):
+    result = await session.post(f'{BASE_URL}/completions', json={
         "model": "text-davinci-003",  # 该模型是GPT-3中最强的模型
         "prompt": prompt,  # 用户说的话
         "max_tokens": max_tokens,  # 200个token大致相当于75个汉字
         "temperature": temperature  # 0-2，数值越大随机性越大
-    }).json()
+    })
+    result = result.json()
     if result.get('error'):
         return result['error']['message']
     answer_result = result['choices'][0]
@@ -22,13 +25,14 @@ def get_completions(prompt: str, max_tokens: int = 500, temperature: int = 1):
     return text
 
 
-def get_chat_completions(content: str, max_tokens: int = None, temperature: int = 1):
-    result = session.post(f'{BASE_URL}/chat/completions', json={
+async def get_chat_completions(content: str, max_tokens: int = None, temperature: int = 1):
+    result = await session.post(f'{BASE_URL}/chat/completions', json={
         "model": "gpt-3.5-turbo-0301",  # 该模型是GPT-3中最强的模型
         "messages": [{"role": "user", "content": content}],  # 用户说的话
         "max_tokens": max_tokens,  # 200个token大致相当于75个汉字
         "temperature": temperature  # 0-2，数值越大随机性越大
-    }).json()
+    })
+    result = result.json()
     if result.get('error'):
         return result['error']['message']
     answer_result = result['choices'][0]

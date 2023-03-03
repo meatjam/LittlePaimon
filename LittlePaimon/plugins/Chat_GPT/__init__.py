@@ -49,7 +49,7 @@ async def _(event: Union[GroupMessageEvent, PrivateMessageEvent], msg: Message =
     msg = msg.extract_plain_text().strip()
     is_thinking = True
     try:
-        await chat_gpt.finish(get_chat_completions(msg))
+        await chat_gpt.finish(await get_chat_completions(msg))
     except FinishedException:
         pass
     except Exception as e:
