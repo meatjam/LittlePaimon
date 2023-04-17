@@ -45,3 +45,8 @@ matchers:
   pm_usage: 刷新ck
   pm_priority: 7
   pm_show: true
+- pm_name: ysch
+  pm_description: 切换当前绑定的UID至下一个或指定序号的UID
+  pm_usage: ysch[序号]
+  pm_priority: 8
+  pm_show: true

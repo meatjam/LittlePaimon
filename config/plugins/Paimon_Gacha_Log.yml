@@ -36,3 +36,8 @@ matchers:
   pm_usage: 导出抽卡记录
   pm_priority: 4
   pm_show: true
+- pm_name: 查看抽卡记录链接
+  pm_description: '*获取你的抽卡记录链接'
+  pm_usage: 查看抽卡记录链接(uid)
+  pm_priority: 5
+  pm_show: true
