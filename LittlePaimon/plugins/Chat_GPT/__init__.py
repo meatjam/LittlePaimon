@@ -72,14 +72,13 @@ async def _(event: Union[GroupMessageEvent, PrivateMessageEvent], msg: Message =
     if not event.to_me:
         return
     msg_input = msg.extract_plain_text().strip()
-    number_index = msg_input.find(' ')
-    first_input = msg_input[:number_index]
-    if len(findall(r'\D', first_input)) > 0:
+    result = findall(r'(\d+)\s+\.*', msg_input)
+    if len(result) == 0:
         msg = msg_input
         max_results = 3
     else:
-        msg = msg_input[number_index:].strip()
-        max_results = int(first_input)
+        msg = msg_input[msg_input.find(' ') + 1:].strip()
+        max_results = int(result[0])
     try:
         result = await get_web_search(msg, max_results)
         output_strings = []

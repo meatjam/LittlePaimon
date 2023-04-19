@@ -1,6 +1,7 @@
 from LittlePaimon.config import config
 # from requests import session
 from requests_async import Session
+from bs4 import BeautifulSoup
 
 BASE_URL = 'https://api.openai.com/v1'
 
@@ -14,7 +15,9 @@ async def get_session_chatgpt():
 async def get_session_web():
     session = Session()
     session.headers = {
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'}
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
+        'content-type': 'application/x-www-form-urlencoded'
+    }
     return session
 
 
@@ -55,11 +58,19 @@ async def get_chat_completions(content: str, max_tokens: int = None, temperature
 
 
 async def get_web_search(q: str, max_results=3, region='cn-zh'):
-    return (await (await get_session_web()).get(
-        f'https://ddg-webapp-aagd.vercel.app/search',
-        params={
+    result = (await (await get_session_web()).post(
+        'https://lite.duckduckgo.com/lite',
+        data={
             'q': q,
-            'max_results': max_results,
-            'region': region
+            'kl': region,
+            'df': None
         }
-    )).json()
+    )).text
+    soup = BeautifulSoup(result, 'html.parser')
+    table = soup.select('table + table')[0]
+    contents = table.select('tr > td.result-snippet')
+    urls = table.select('tr > td > a')
+    outputs = []
+    for i in range(0, max_results if max_results < len(contents) else len(contents)):
+        outputs.append({'body': contents[i].text.strip(), 'href': urls[i].get('href')})
+    return outputs
