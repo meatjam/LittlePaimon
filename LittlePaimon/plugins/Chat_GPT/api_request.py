@@ -1,3 +1,4 @@
+import aiohttp
 from LittlePaimon.config import config
 # from requests import session
 from requests_async import Session
@@ -7,8 +8,7 @@ BASE_URL = 'https://api.openai.com/v1'
 
 
 async def get_session_chatgpt():
-    session = Session()
-    session.headers = {'authorization': f'Bearer {config.chatGPT_APIKEY}'}
+    session = aiohttp.ClientSession(headers={'authorization': f'Bearer {config.chatGPT_APIKEY}'})
     return session
 
 
@@ -28,8 +28,9 @@ async def get_completions(prompt: str, max_tokens: int = 500, temperature: int =
         "prompt": prompt,  # 用户说的话
         "max_tokens": max_tokens,  # 200个token大致相当于75个汉字
         "temperature": temperature  # 0-2，数值越大随机性越大
-    })
-    result = result.json()
+    }, proxy='http://localhost:7981')
+    result = await result.json()
+    await session.close()
     if result.get('error'):
         return result['error']['message']
     answer_result = result['choices'][0]
@@ -46,8 +47,9 @@ async def get_chat_completions(content: str, max_tokens: int = None, temperature
         "messages": [{"role": "user", "content": content}],  # 用户说的话
         "max_tokens": max_tokens,  # 200个token大致相当于75个汉字
         "temperature": temperature  # 0-2，数值越大随机性越大
-    })
-    result = result.json()
+    }, proxy='http://localhost:7981')
+    result = await result.json()
+    await session.close()
     if result.get('error'):
         return result['error']['message']
     answer_result = result['choices'][0]
