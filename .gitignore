@@ -144,7 +144,9 @@ dmypy.json
 accounts
 data
 resources
-!LittlePaimon/config/data
+!LittlePaimon/config
 /resources/
 /LittlePaimon-Bot/go-cqhttp/config.yml
 /config/paimon_config.yml
+
+config
