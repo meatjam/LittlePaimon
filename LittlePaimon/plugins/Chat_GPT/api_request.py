@@ -2,6 +2,10 @@ import aiohttp
 from LittlePaimon.config import config
 # from requests import session
 from requests_async import Session
+# pip install --force-reinstall httpcore==0.15
+# pip install h11==0.8.*
+# pip install idna==2.*
+# pip install idna==0.11
 from bs4 import BeautifulSoup
 
 BASE_URL = 'https://api.openai.com/v1'
