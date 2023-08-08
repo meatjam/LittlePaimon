@@ -32,7 +32,7 @@ async def get_completions(prompt: str, max_tokens: int = 500, temperature: int =
         "prompt": prompt,  # 用户说的话
         "max_tokens": max_tokens,  # 200个token大致相当于75个汉字
         "temperature": temperature  # 0-2，数值越大随机性越大
-    }, proxy='http://localhost:7981')
+    })
     result = await result.json()
     await session.close()
     if result.get('error'):
@@ -51,7 +51,7 @@ async def get_chat_completions(content: str, max_tokens: int = None, temperature
         "messages": [{"role": "user", "content": content}],  # 用户说的话
         "max_tokens": max_tokens,  # 200个token大致相当于75个汉字
         "temperature": temperature  # 0-2，数值越大随机性越大
-    }, proxy='http://localhost:7981')
+    })
     result = await result.json()
     await session.close()
     if result.get('error'):
