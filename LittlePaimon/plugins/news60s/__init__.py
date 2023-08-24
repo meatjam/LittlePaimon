@@ -32,7 +32,7 @@ news = on_command('早报', aliases={'今日早报', '今日新闻', '60s读世�
 async def _(event: MessageEvent, sub_id=CommandObjectID(), switch=CommandSwitch(), sub_time=CommandTime()):
     if switch is None:
         await news.send('60秒读世界新闻获取中，请稍等...')
-        await news.finish(MessageSegment.image(file=config.morning_news))
+        await news.finish(MessageSegment.image(file=config.morning_news, proxy=False))
     else:
         sub_data = {
             'sub_id':    sub_id,
