@@ -1,1 +1,37 @@
-{"display":"MIRAI.665480.001","product":"mirai","device":"mirai","board":"mirai","model":"mirai","finger_print":"mamoe/mirai/mirai:10/MIRAI.200122.001/5731583:user/release-keys","boot_id":"12937d6d-13d3-545b-f43f-741a434b2636","proc_version":"Linux version 3.0.31-EyIqLEh1 (android-build@xxx.xxx.xxx.xxx.com)","protocol":2,"imei":"068119716078989","brand":"mamoe","bootloader":"unknown","base_band":"","version":{"incremental":"5891938","release":"10","codename":"REL","sdk":29},"sim_info":"T-Mobile","os_type":"android","mac_address":"00:50:56:C0:00:08","ip_address":[10,0,1,3],"wifi_bssid":"00:50:56:C0:00:08","wifi_ssid":"\u003cunknown ssid\u003e","imsi_md5":"d02c9087118dc773c378705048d32028","android_id":"6d6c3cf85c52c8f4","apn":"wifi","vendor_name":"MIUI","vendor_os_name":"mirai"}
+{
+    "display": "LittlePaimon.974228.001",
+    "product": "LittlePaimon",
+    "device": "LittlePaimon",
+    "board": "LittlePaimon",
+    "model": "LittlePaimon",
+    "finger_print": "mamoe/LittlePaimon/LittlePaimon:10/LittlePaimon.200122.001/3624382:user/release-keys",
+    "boot_id": "1207ece3-8ef0-7140-2a01-8b10b0a5a589",
+    "proc_version": "Linux version 3.0.31-MWzO1cpU (android-build@xxx.xxx.xxx.xxx.com)",
+    "protocol": 6,
+    "imei": "441074935426272",
+    "brand": "mamoe",
+    "bootloader": "unknown",
+    "base_band": "",
+    "version": {
+        "incremental": "5891938",
+        "release": "10",
+        "codename": "REL",
+        "sdk": 29
+    },
+    "sim_info": "T-Mobile",
+    "os_type": "android",
+    "mac_address": "00:50:56:C0:00:08",
+    "ip_address": [
+        10,
+        0,
+        1,
+        3
+    ],
+    "wifi_bssid": "00:50:56:C0:00:08",
+    "wifi_ssid": "\u003cunknown ssid\u003e",
+    "imsi_md5": "dd700956cb7a6f81309da2f5cd714113",
+    "android_id": "46cd00b7a53a562e",
+    "apn": "wifi",
+    "vendor_name": "MIUI",
+    "vendor_os_name": "LittlePaimon"
+}
