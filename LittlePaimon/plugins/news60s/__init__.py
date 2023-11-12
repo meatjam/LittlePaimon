@@ -1,5 +1,6 @@
 from typing import Optional
 
+from requests_async import Session
 from nonebot import get_bot, on_command
 from nonebot.adapters.onebot.v11 import MessageEvent, MessageSegment
 from nonebot.plugin import PluginMetadata
@@ -32,7 +33,8 @@ news = on_command('早报', aliases={'今日早报', '今日新闻', '60s读世�
 async def _(event: MessageEvent, sub_id=CommandObjectID(), switch=CommandSwitch(), sub_time=CommandTime()):
     if switch is None:
         await news.send('60秒读世界新闻获取中，请稍等...')
-        await news.finish(MessageSegment.image(file=config.morning_news, proxy=True, cache=False))
+        img_bytes = (await Session().get(config.morning_news)).content
+        await news.finish(MessageSegment.image(file=img_bytes, cache=False))
     else:
         sub_data = {
             'sub_id':    sub_id,
