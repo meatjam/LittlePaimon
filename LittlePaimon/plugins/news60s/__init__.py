@@ -105,7 +105,8 @@ async def send_news(sub_id: int, sub_type: str, extra_id: Optional[int]):
         else:
             api = 'send_group_msg'
             data = {'group_id': sub_id}
-        data['message'] = MessageSegment.image(file=config.morning_news)
+        img_bytes = (await Session().get(config.morning_news)).content
+        data['message'] = MessageSegment.image(file=img_bytes, cache=False)
         await get_bot().call_api(api, **data)
         logger.info('60秒读世界', '', {sub_type: sub_id}, '推送成功', True)
     except Exception as e:
