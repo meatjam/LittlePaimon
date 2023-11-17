@@ -49,7 +49,7 @@ async def _(event: MessageEvent, sub_id=CommandObjectID(), switch=CommandSwitch(
                     scheduler.remove_job(f'genshin_calendar_{sub_id}')
                 scheduler.add_job(func=send_calendar, trigger='cron', hour=sub_time[0], minute=sub_time[1],
                                   id=f'genshin_calendar_{sub_id}',
-                                  args=(sub_data['sub_id'], sub_data['sub_type'], sub_data.get('extra_id', None), news),
+                                  args=(sub_data['sub_id'], sub_data['sub_type'], sub_data.get('extra_id', None), calendar),
                                   misfire_grace_time=10)
 
                 logger.info('原神日历', '', {sub_data['sub_type']: sub_id, 'time': f'{sub_time[0]}:{sub_time[1]}'}, '订阅成功',
@@ -66,7 +66,7 @@ async def _(event: MessageEvent, sub_id=CommandObjectID(), switch=CommandSwitch(
             await calendar.finish('当前会话未开启原神日历订阅')
 
 
-async def send_calendar(sub_id: int, sub_type: str, extra_id: Optional[int], news: Type[Matcher]):
+async def send_calendar(sub_id: int, sub_type: str, extra_id: Optional[int], calendar: Type[Matcher]):
     try:
         if sub_type == 'guild':
             api = 'send_guild_channel_msg'
@@ -79,7 +79,7 @@ async def send_calendar(sub_id: int, sub_type: str, extra_id: Optional[int], new
             data = {'group_id': sub_id}
         im = await generate_day_schedule('cn')
         data['message'] = MessageSegment.image(im)
-        await news.send(data['message'])
+        await calendar.send(data['message'])
         # await get_bot().call_api(api, **data)
         logger.info('原神日历', '', {sub_type: sub_id}, '推送成功', True)
     except Exception as e:
