@@ -1,9 +1,10 @@
-from typing import Optional
+from typing import Optional, Type
 
 from requests_async import Session
 from nonebot import get_bot, on_command
 from nonebot.adapters.onebot.v11 import MessageEvent, MessageSegment
 from nonebot.plugin import PluginMetadata
+from nonebot.matcher import Matcher
 
 from LittlePaimon.config import config
 from LittlePaimon.database import GeneralSub
@@ -57,7 +58,7 @@ async def _(event: MessageEvent, sub_id=CommandObjectID(), switch=CommandSwitch(
                     hour=sub_time[0],
                     minute=sub_time[1],
                     id=f'news60s_{sub_id}',
-                    args=(sub_data['sub_id'], sub_data['sub_type'], sub_data.get('extra_id', None)),
+                    args=(sub_data['sub_id'], sub_data['sub_type'], sub_data.get('extra_id', None), news),
                     misfire_grace_time=10
                 )
                 logger.info('60秒读世界', '', {sub_data['sub_type']: sub_id, 'time': f'{sub_time[0]}:{sub_time[1]}'}, '订阅成功',
@@ -94,7 +95,7 @@ async def _():
         logger.warning('60秒读世界', '订阅列表', f'加载失败: {e}')
 
 
-async def send_news(sub_id: int, sub_type: str, extra_id: Optional[int]):
+async def send_news(sub_id: int, sub_type: str, extra_id: Optional[int], news: Type[Matcher]):
     try:
         if sub_type == 'private':
             api = 'send_private_msg'
@@ -107,7 +108,8 @@ async def send_news(sub_id: int, sub_type: str, extra_id: Optional[int]):
             data = {'group_id': sub_id}
         img_bytes = (await Session().get(config.morning_news)).content
         data['message'] = MessageSegment.image(file=img_bytes, cache=False)
-        await get_bot().call_api(api, **data)
+        await news.send(data['message'])
+        # await get_bot().call_api(api, **data)
         logger.info('60秒读世界', '', {sub_type: sub_id}, '推送成功', True)
     except Exception as e:
         logger.info('60秒读世界', '', {sub_type: sub_id}, f'推送失败: {e}', False)
