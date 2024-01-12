@@ -9,6 +9,8 @@ from LittlePaimon.database import GeneralSub
 
 SCHEDULER_ID_PREFIX = 'groupNameCount'
 KEY_PLACEMENT_STRING = '{n}'
+HOUR = 0
+MINUTE = 0
 
 __plugin_meta__ = PluginMetadata(
     name='群名倒计时',
@@ -24,7 +26,7 @@ __plugin_meta__ = PluginMetadata(
 group_name_count = on_command('群名倒计时', priority=8, block=True, state={
     'pm_name': '群名倒计时',
     'pm_description': '群名倒计时',
-    'pm_usage': f'群名倒计时 [名称(天数位置放个{KEY_PLACEMENT_STRING})] [起始天数]',
+    'pm_usage': f'群名倒计时 on [名称(天数位置放个{KEY_PLACEMENT_STRING})] [起始天数] /off',
     'pm_priority': 3
 })
 
@@ -32,8 +34,6 @@ group_name_count = on_command('群名倒计时', priority=8, block=True, state={
 @group_name_count.handle()
 async def _(bot: Bot, event: GroupMessageEvent, sub_id=CommandObjectID(), switch=CommandSwitch()):
     raw_msg = event.raw_message
-    HOUR = 0
-    MINUTE = 0
     jod_id = f'{SCHEDULER_ID_PREFIX}{sub_id}'
     sub_data = {
         'sub_id': sub_id,
@@ -74,7 +74,9 @@ async def _(bot: Bot, event: GroupMessageEvent, sub_id=CommandObjectID(), switch
         logger.info('群名倒计时', '', {sub_data['sub_type']: sub_id, 'time': f'{HOUR}:{MINUTE}'}, '订阅成功', True)
         await bot.set_group_name(group_id=event.group_id,
             group_name=f'{text[:placement_index]}{days["value"]}{text[placement_index + len(KEY_PLACEMENT_STRING):]}')
-        await group_name_count.finish(f'群名倒计时订阅成功， 将在每日{HOUR}:{MINUTE}修改群名')
+        await group_name_count.finish(
+            f'群名倒计时订阅成功， 将在每日{str(HOUR).rjust(2, "0")}:{str(MINUTE).rjust(2, "0")}修改群名'
+        )
     else:
         if sub := await GeneralSub.get_or_none(**sub_data):
             await sub.delete()
