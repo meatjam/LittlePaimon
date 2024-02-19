@@ -2,7 +2,7 @@ import random
 from typing import Union
 
 from nonebot import on_command
-from nonebot.adapters.onebot.v11 import Message, MessageEvent, GroupMessageEvent, PrivateMessageEvent
+from nonebot.adapters.onebot.v11 import Message, MessageEvent, GroupMessageEvent, PrivateMessageEvent, Bot
 from nonebot.adapters.onebot.v11.exception import ActionFailed
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
@@ -54,13 +54,13 @@ update_voice = on_command('更新原神语音资源', priority=12, permission=SU
 
 
 @guess_voice.handle()
-async def _(event: GroupMessageEvent, msg: Message = CommandArg(), lang=CommandLang()):
+async def _(bot: Bot, event: GroupMessageEvent, msg: Message = CommandArg(), lang=CommandLang()):
     msg = msg.extract_plain_text().strip()
     if 'rank' in msg or '排行' in msg:
         result = await get_rank(event.group_id)
         await guess_voice.finish(result)
     else:
-        game = GuessVoice(event.group_id, config.guess_voice_time, lang)
+        game = GuessVoice(event.group_id, bot, config.guess_voice_time, lang)
         result = await game.start()
         await guess_voice.send(f'即将发送一段语音，将在{config.guess_voice_time}秒后公布答案')
         try:
