@@ -1,7 +1,7 @@
-name: 实用工具
-module_name: tools
 description: 一些实用的工具插件
-usage: ''
-show: true
-priority: 99
 matchers: []
+module_name: tools
+name: 实用工具
+priority: 99
+show: true
+usage: ''

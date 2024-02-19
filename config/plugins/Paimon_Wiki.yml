@@ -1,34 +1,47 @@
-name: 原神Wiki
-module_name: Paimon_Wiki
 description: 原神WIKI百科
-usage: "\"1.[xx角色攻略]查看西风驿站出品的角色一图流攻略\n\"\n\"2.[xx角色材料]查看惜月出品的角色材料统计\n\"\n\"3.[xx参考面板]查看blue菌hehe出品的参考面板攻略\n\
-  \"\n\"4.[xx收益曲线]查看blue菌hehe出品的收益曲线攻略\n\"\n\"5.[今日/明日/周x材料]查看每日角色天赋材料和武器突破材料表\n\"\
-  \n\"6.[xx武器攻略]查看武器攻略\n\"\n\"7.[xx原魔图鉴]查看原魔图鉴\n\"\n"
-show: true
-priority: 3
 matchers:
-- pm_name: 材料地图
-  pm_description: "查看多个材料大地图采集点。\n示例：材料地图 鸣草 鬼兜虫 提瓦特"
-  pm_usage: 材料地图<材料名列表>[地图]
-  pm_priority: 10
-  pm_show: true
-- pm_name: 生成地图
-  pm_description: 生成材料图鉴等所需要的地图资源，仅超级用户可用。
-  pm_usage: 生成地图
-  pm_priority: 11
-  pm_show: true
-- pm_name: 尘歌壶摹本材料
-  pm_description: 查看尘歌壶摹本所需要的材料总览
-  pm_usage: 尘歌壶材料<摹数>
-  pm_priority: 12
-  pm_show: true
-- pm_name: 七圣召唤图鉴列表
-  pm_description: 查看七圣召唤卡牌图鉴列表
-  pm_usage: 原牌列表
-  pm_priority: 14
-  pm_show: true
-- pm_name: 原神WIKI
-  pm_description: "支持查询：角色的图鉴、攻略、材料、参考面板、收益曲线，武器、圣遗物、原魔、七圣召唤图鉴，今日|周几材料\n示例：钟离攻略、护摩图鉴、今日材料"
-  pm_usage: <对象名><图鉴|攻略|材料>
-  pm_priority: 1
-  pm_show: true
+- {pm_description: '查看多个材料大地图采集点。
+
+    示例：材料地图 鸣草 鬼兜虫 提瓦特', pm_name: 材料地图, pm_priority: 10, pm_show: true, pm_usage: '材料地图<材料名列表>[地图]'}
+- {pm_description: 生成材料图鉴等所需要的地图资源，仅超级用户可用。, pm_name: 生成地图, pm_priority: 11, pm_show: true,
+  pm_usage: 生成地图}
+- {pm_description: 查看尘歌壶摹本所需要的材料总览, pm_name: 尘歌壶摹本材料, pm_priority: 12, pm_show: true,
+  pm_usage: 尘歌壶材料<摹数>}
+- {pm_description: 查看七圣召唤卡牌图鉴列表, pm_name: 七圣召唤图鉴列表, pm_priority: 14, pm_show: true,
+  pm_usage: 原牌列表}
+- {pm_description: '支持查询：角色的图鉴、攻略、材料、参考面板、收益曲线，武器、圣遗物、原魔、七圣召唤图鉴，今日|周几材料
+
+    示例：钟离攻略、护摩图鉴、今日材料', pm_name: 原神WIKI, pm_priority: 1, pm_show: true, pm_usage: <对象名><图鉴|攻略|材料>}
+module_name: Paimon_Wiki
+name: 原神Wiki
+priority: 3
+show: true
+usage: '"1.[xx角色攻略]查看西风驿站出品的角色一图流攻略
+
+  "
+
+  "2.[xx角色材料]查看惜月出品的角色材料统计
+
+  "
+
+  "3.[xx参考面板]查看blue菌hehe出品的参考面板攻略
+
+  "
+
+  "4.[xx收益曲线]查看blue菌hehe出品的收益曲线攻略
+
+  "
+
+  "5.[今日/明日/周x材料]查看每日角色天赋材料和武器突破材料表
+
+  "
+
+  "6.[xx武器攻略]查看武器攻略
+
+  "
+
+  "7.[xx原魔图鉴]查看原魔图鉴
+
+  "
+
+  '
